@@ -1,0 +1,76 @@
+open build/OCaml
+DefineCommandVars()
+
+.PHONY: lib app clean
+
+################################################################################
+# General Project Information
+PROJECT = oloop
+
+if $(test -e .git)
+  GIT_COMMIT = 'Some "$(shell git rev-parse HEAD)"'
+  export
+else
+  GIT_COMMIT = 'None'
+  export
+
+LIB_NAME = $(PROJECT)
+LIB_PACKAGES = core async sexplib.syntax compiler-libs.toplevel
+LIB_MODULES[] =
+  $(removesuffix $(basename $(ls lib/*.ml)))
+
+APP_NAME = $(PROJECT)
+APP_PACKAGES = $(LIB_PACKAGES)
+APP_MODULES[] =
+  $(addprefix ../lib/, $(LIB_MODULES))
+  $(removesuffix $(basename $(ls app/*.ml)))
+
+################################################################################
+# Build Parameters
+USE_OCAMLFIND = true
+if $(not $(OCAMLFIND_EXISTS))
+   eprintln(Required package ocamlfind not found.)
+   exit 1
+
+NATIVE_ENABLED = false
+BYTE_ENABLED = $(OCAMLC_EXISTS)
+
+OCAMLFLAGS = -bin-annot -annot -w A-4-33-40-41-42-44-45-48 -thread -safe-string -short-paths
+OCAMLCFLAGS =
+OCAMLOPTFLAGS =
+OCAML_LINK_FLAGS = -linkpkg
+OCAML_BYTE_LINK_FLAGS =
+OCAML_NATIVE_LINK_FLAGS =
+OCAMLFINDFLAGS = -syntax camlp4o
+
+################################################################################
+# Sub-directories
+.SUBDIRS: .
+  mkdir -p _build/lib
+  mkdir -p _build/app
+  vmount(-l, lib/, _build/lib/)
+  vmount(-l, app/, _build/app/)
+
+  ##############################################################################
+  # Library
+  .SUBDIRS: _build/lib
+    OCAMLPACKS[] = $(LIB_PACKAGES)
+    lib: $(OCamlLibrary $(LIB_NAME), $(LIB_MODULES))
+    .DEFAULT: lib
+
+
+  ##############################################################################
+  # Command Line App
+  .SUBDIRS: _build/app
+    OCAMLINCLUDES += $(dir ../lib/)
+    OCAMLPACKS[] = $(APP_PACKAGES)
+
+    app: $(OCamlProgram $(APP_NAME), $(APP_MODULES))
+    .DEFAULT: app
+
+
+################################################################################
+# Clean Up
+clean:
+  rm -rf _build
+  rm -rf OMakefile.omc OMakeroot.omc .omakedb .omakedb.lock
