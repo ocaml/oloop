@@ -1,0 +1,11 @@
+S app
+S lib
+B _build/app
+B _build/lib
+PKG core
+PKG core.syntax
+PKG core.syntax
+PKG sexplib
+PKG sexplib.syntax
+PKG async
+PKG compiler-libs

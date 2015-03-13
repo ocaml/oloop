@@ -1,5 +1,5 @@
 (* Syntax hightlight code and eval ocaml toplevel phrases.
- * Based on http://github.com/ocaml/ocaml.org 
+ * Based on http://github.com/ocaml/ocaml.org
  * Modified by Anil Madhavapeddy for Real World OCaml and to use Core *)
 open Core.Std
 open Oloop
