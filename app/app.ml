@@ -188,11 +188,23 @@ let () =
 
 (** End of uTop code *)
 
-let run ?out_dir filename =
+let run ?out_dir ?open_core ?open_async filename =
   eprintf "C: %s\n%!" filename;
   let out_dir = match out_dir with
     | Some x -> x
     | None -> Filename.dirname filename
+  in
+  let initial_phrases = match open_core with
+    | Some x ->
+      if x then initial_phrases @ ["open Core.Std"]
+      else initial_phrases
+    | None -> initial_phrases
+  in
+  let initial_phrases = match open_async with
+    | Some x ->
+      if x then initial_phrases @ ["#require \"async\"";"open Async.Std"]
+      else initial_phrases
+    | None -> initial_phrases
   in
   reset_toplevel ();
   List.iter initial_phrases ~f:(fun phrase ->
@@ -223,9 +235,14 @@ let main : Command.t = Command.basic
     empty
     +> flag "-o" (optional string)
       ~doc:"DIR Write files to directory DIR. Default is write to the \
-                same directory that FILE is in."
+            same directory that FILE is in."
+    +> flag "-c" (optional bool) ~doc:"CORE Do open Core.Std before \
+                                      evaluating any code"
+    +> flag "-a" (optional bool) ~doc:"ASYNC Do open Async.Std before \
+                                      evaluating any code"
     +> anon (sequence ("file" %: file))
   )
-  (fun out_dir files () -> List.iter files ~f:(run ?out_dir))
+  (fun out_dir open_core open_async files () ->
+     List.iter files ~f:(run ?out_dir ?open_core ?open_async))
 
 let () = Command.run main
