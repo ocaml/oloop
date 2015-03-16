@@ -1,0 +1,26 @@
+#								-*-conf-*-
+OASISFormat: 0.4
+Name:        oloop
+Version:     0.0.1
+Synopsis:    Evaluate code through the OCaml toploop.
+#Description: 
+Authors:     Ashish Agarwal, Christophe Troestler
+Maintainers: Ashish Agarwal <>,
+             Christophe Troestler <Christophe.Troestler@umons.ac.be>
+License:     GPL-3 with OCaml linking exception
+Homepage:    https://github.com/agarwal/oloop
+Plugins:     META (0.4), StdFiles (0.4)
+OCamlVersion: >= 4.01.0
+
+Library "oloop"
+  Path:        lib
+  BuildTools:  ocamlbuild
+  Modules:     Oloop
+  InternalModules: Oloop_code
+  BuildDepends: core, async, sexplib.syntax, compiler-libs.toplevel
+
+
+SourceRepository master
+  Type:     git
+  Location: https://github.com/agarwal/oloop.git
+  Browser:  https://github.com/agarwal/oloop
