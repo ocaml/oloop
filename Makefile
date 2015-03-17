@@ -30,7 +30,7 @@ tar: $(DISTFILES)
 
 clean:
 	ocaml setup.ml -$@
-	$(RM) $(PKG_TARBALL)
+	$(RM) $(PKG_TARBALL) $(wildcard setup.data)
 
 .PHONY: all byte native configure doc test install uninstall reinstall \
   clean tar
