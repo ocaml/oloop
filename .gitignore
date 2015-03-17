@@ -6,3 +6,5 @@
 /setup.data
 /setup.log
 /setup.ml
+*.native
+*.byte
