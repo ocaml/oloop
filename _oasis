@@ -17,7 +17,24 @@ Library "oloop"
   BuildTools:  ocamlbuild
   Modules:     Oloop
   InternalModules: Oloop_code
-  BuildDepends: core, async, sexplib.syntax, compiler-libs.toplevel
+  BuildDepends: core, async, sexplib.syntax, compiler-libs.common
+
+Executable "oloop-top"
+  Path:           lib
+  MainIs:         oloop-top.ml
+  BuildDepends:   compiler-libs.toplevel, bytes
+  CompiledObject: byte
+  BuildTools:     ocamlbuild
+  Install:        true
+
+
+Executable "basic"
+  Path:           tests
+  MainIs:         basic.ml
+  BuildDepends:   oloop, bytes
+  CompiledObject: best
+  BuildTools:     ocamlbuild
+  Install:        false
 
 
 SourceRepository master
