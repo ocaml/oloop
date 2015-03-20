@@ -1,0 +1,3 @@
+(* Configuration generated at the configure step. *)
+
+let bindir = "$bindir"

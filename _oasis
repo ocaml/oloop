@@ -11,6 +11,7 @@ License:     GPL-3 with OCaml linking exception
 Homepage:    https://github.com/agarwal/oloop
 Plugins:     META (0.4), StdFiles (0.4)
 OCamlVersion: >= 4.01.0
+FilesAB:     lib/oloop_conf.ml.ab
 
 Library "oloop"
   Path:        lib

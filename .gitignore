@@ -12,3 +12,4 @@
 META
 *.mldylib
 *.mllib
+/lib/oloop_conf.ml

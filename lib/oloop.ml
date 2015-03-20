@@ -2,9 +2,10 @@ module Code = Oloop_code
 open Core.Std
 open Async.Std
 
-
-let default_toplevel = ref "oloop-top"
-let default_toplevel = ref "./oloop-top.byte" (* test *)
+let default_toplevel =
+  ref(if Caml.Sys.file_exists "./oloop-top.byte" then
+        "./oloop-top.byte" (* test *)
+      else Filename.concat Oloop_conf.bindir "oloop-top")
 
 type 'a t = {
     proc: Process.t;
