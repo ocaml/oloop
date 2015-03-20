@@ -5,7 +5,7 @@ Version:     0.0.1
 Synopsis:    Evaluate code through the OCaml toploop.
 #Description: 
 Authors:     Ashish Agarwal, Christophe Troestler
-Maintainers: Ashish Agarwal <>,
+Maintainers: Ashish Agarwal <agarwal1975@gmail.com>,
              Christophe Troestler <Christophe.Troestler@umons.ac.be>
 License:     GPL-3 with OCaml linking exception
 Homepage:    https://github.com/agarwal/oloop
@@ -28,9 +28,18 @@ Executable "oloop-top"
   BuildTools:     ocamlbuild
   Install:        true
 
+Executable "oloop"
+  Path:           app
+  MainIs:         app.ml
+  BuildDepends:   oloop
+  CompiledObject: best
+  BuildTools:     ocamlbuild
+  Install:        true
+
 
 Executable "basic"
   Path:           tests
+  Build$:         flag(tests)
   MainIs:         basic.ml
   BuildDepends:   oloop, bytes
   CompiledObject: best
