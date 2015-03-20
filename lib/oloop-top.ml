@@ -4,8 +4,6 @@
 
 open Oloop_types
 
-let ch_debug = open_out "/tmp/oloop.log"
-
 let initialize_toplevel ~redirect_stderr =
   Sys.interactive := true;
   Toploop.set_paths ();
@@ -30,9 +28,6 @@ let () =
   let std_print_out_phrase = !Toploop.print_out_phrase in
   Toploop.print_out_phrase
   := fun _fmt phrase ->
-     let b = Buffer.create 1024 in
-     std_print_out_phrase Format.(formatter_of_buffer b) phrase;
-     Printf.fprintf ch_debug "OUTCOME: [%s]\n" (Buffer.contents b);
      out_phrase := phrase
 
 let eval ~msg_with_location lexbuf =
@@ -72,7 +67,6 @@ let read_phrase_exn ch =
 
 let main ~msg_with_location ~redirect_stderr ~sock_name =
   initialize_toplevel ~redirect_stderr;
-  Printf.fprintf ch_debug "START %S\n%!" sock_name;
   let ch = (* or exn *)
     let fd = Unix.socket Unix.PF_UNIX Unix.SOCK_STREAM 0 in
     Unix.connect fd (Unix.ADDR_UNIX sock_name);
@@ -81,7 +75,6 @@ let main ~msg_with_location ~redirect_stderr ~sock_name =
     Location.reset();
     let outcome =
       try let phrase = read_phrase_exn stdin in
-          Printf.fprintf ch_debug "phrase=%S\n%!" phrase;
           eval ~msg_with_location (Lexing.from_string(phrase ^ ";;"))
       with e -> Error(`Internal_error e, "Exception raised during the \
                                          phrase evaluation") in
@@ -89,11 +82,9 @@ let main ~msg_with_location ~redirect_stderr ~sock_name =
     flush stdout;
     Format.pp_print_flush Format.err_formatter ();
     flush stderr;
-    Printf.fprintf ch_debug "phrase evaluated\n%!";
     (* FIXME: Outcometree.out_value may contain a closure in Oval_printer,
        we must filter that out. *)
     send_out_phrase_or_error ch outcome;
-    Printf.fprintf ch_debug "outcome sent!\n%!";
   done
 
 let () =
@@ -127,10 +118,6 @@ let () =
   let specs = Arg.align specs in
   let anon_fun _ = raise(Arg.Bad "No anomymous argument") in
   Arg.parse specs anon_fun "oloop-top [options]";
-  try
-    main ~msg_with_location:!msg_with_location
-         ~redirect_stderr:!redirect_stderr
-         ~sock_name:!sock_name
-  with e ->
-    Printf.fprintf ch_debug "FATAL EXN: %s\n%!" (Printexc.to_string e);
-    Printexc.print_backtrace ch_debug
+  main ~msg_with_location:!msg_with_location
+       ~redirect_stderr:!redirect_stderr
+       ~sock_name:!sock_name
