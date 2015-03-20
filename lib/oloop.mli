@@ -1,5 +1,5 @@
-open Core.Std
-open Async.Std
+open Core_kernel.Std
+open Async_kernel.Std
 
 type 'a t
 (** A handle to a toploop. *)

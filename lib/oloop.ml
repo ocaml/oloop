@@ -1,5 +1,5 @@
 module Code = Oloop_code
-open Core.Std
+open Core_kernel.Std
 open Async.Std
 
 let default_toplevel =

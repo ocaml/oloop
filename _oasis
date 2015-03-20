@@ -18,7 +18,7 @@ Library "oloop"
   BuildTools:  ocamlbuild
   Modules:     Oloop
   InternalModules: Oloop_code
-  BuildDepends: core, async, sexplib.syntax, compiler-libs.common
+  BuildDepends: core_kernel, async, sexplib.syntax, compiler-libs.common
 
 Executable "oloop-top"
   Path:           lib
