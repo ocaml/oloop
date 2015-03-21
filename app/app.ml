@@ -2,7 +2,8 @@
  * Based on http://github.com/ocaml/ocaml.org
  * Modified by Anil Madhavapeddy for Real World OCaml and to use Core *)
 open Core.Std
-open Oloop
+open Async.Std
+module Code = Oloop_code
 
 (** Run these phrases silently before any code *)
 let initial_phrases = [
@@ -12,89 +13,6 @@ let initial_phrases = [
   "#require \"core.syntax\"";
   "#require \"core.top\""
 ]
-
-(** Initialise toploop and turn on short-paths *)
-let reset_toplevel () : unit =
-  Toploop.initialize_toplevel_env ();
-  Toploop.input_name := "//toplevel//";
-  Topdirs.dir_directory (Sys.getenv_exn "OCAML_TOPLEVEL_PATH");
-  Clflags.real_paths := false
-
-(** Read data from given file descriptor once it is ready. Return when
-    no new data shows up for a while, 0.001 seconds. *)
-let string_of_fd (fd:Unix.File_descr.t) : string =
-  let is_ready_for_read fd : bool =
-    let {Unix.Select_fds.read; _} =
-      Unix.select ~read:[fd] ~write:[] ~except:[] ~timeout:(`After 0.001) ()
-    in
-    read <> []
-  in
-  let buf = Buffer.create 1024 in
-  let s = String.create 256 in
-  while is_ready_for_read fd do
-    let r = Unix.read fd ~buf:s ~pos:0 ~len:256 in
-    Buffer.add_substring buf s 0 r
-  done;
-  Buffer.contents buf
-
-let flush_std_out_err () =
-  Format.pp_print_flush Format.std_formatter ();
-  flush stdout;
-  Format.pp_print_flush Format.err_formatter ();
-  flush stderr
-
-(** Evaluate double-semicolon terminated phrase through the
-    toploop. State of the toplevel environment is relevant. You may
-    want to call [reset_toplevel]. *)
-let toploop_eval (input:string) : Code.phrase =
-  if String.strip input = ";;" then
-    {Code.input; output = ""; stdout = ""; stderr = ""}
-  else (
-    let init_stdout = Unix.dup Unix.stdout in
-    let init_stderr = Unix.dup Unix.stderr in
-    flush_std_out_err ();
-    let (out_in, out_out) = Unix.pipe() in
-    Unix.dup2 ~src:out_out ~dst:Unix.stdout; (* Unix.stdout → out_out *)
-    let (err_in, err_out) = Unix.pipe() in
-    Unix.dup2 ~src:err_out ~dst:Unix.stderr; (* Unix.stderr → err_out *)
-    let get_stdout_stderr_and_restore () =
-      flush_std_out_err ();
-      let out = string_of_fd out_in in
-      Unix.close out_in;
-      Unix.close out_out;
-      Unix.dup2 ~src:init_stdout ~dst:Unix.stdout; (* restore initial stdout *)
-      let err = string_of_fd err_in in
-      Unix.close err_in;
-      Unix.close err_out;
-      Unix.dup2 ~src:init_stderr ~dst:Unix.stderr; (* restore initial stderr *)
-      (out, err) in
-    try
-      let lexbuf = Lexing.from_string input in
-      let dummypos = { Lexing.pos_fname = "//toplevel//"; pos_lnum = 0; pos_bol = 0; pos_cnum = -1; } in
-      lexbuf.Lexing.lex_start_p <- dummypos;
-      lexbuf.Lexing.lex_curr_p <- dummypos;
-      let phrase = !Toploop.parse_toplevel_phrase lexbuf in
-      ignore(Toploop.execute_phrase true Format.str_formatter phrase);
-      let output = Format.flush_str_formatter () in
-      let stdout,stderr = get_stdout_stderr_and_restore () in
-      {Code.input; output; stdout; stderr}
-    with e -> (
-      let stdout,stderr = get_stdout_stderr_and_restore () in
-      let backtrace_enabled = Printexc.backtrace_status () in
-      if not backtrace_enabled then Printexc.record_backtrace true;
-      let output =
-        try
-          Errors.report_error Format.str_formatter e;
-          Format.flush_str_formatter ()
-        with exn ->
-          sprintf "rwo_runtop: the following error was raised during \
-                   error reporting for %S:\n%s\nError backtrace:\n%s\n%!"
-            input (Exn.to_string exn) (Printexc.get_backtrace ())
-      in
-      if not backtrace_enabled then Printexc.record_backtrace false;
-      {Code.input; output; stdout; stderr}
-    )
-  )
 
 
 (*** Suppress values beginning with _.  Lifted straight from uTop:
@@ -188,6 +106,23 @@ let () =
 
 (** End of uTop code *)
 
+let string_of_queue q =
+  String.concat ~sep:"" (Queue.to_list q)
+
+let toploop_eval t (phrase: string) =
+  Oloop.eval t phrase >>| function
+  | Result.Ok (out_phrase, o) ->
+     let b = Buffer.create 1024 in
+     !Oprint.out_phrase (Format.formatter_of_buffer b) out_phrase;
+     { Code.input = phrase;
+       output = Buffer.contents b;
+       stdout = string_of_queue (Oloop.Output.stdout o);
+       stderr = string_of_queue (Oloop.Output.stderr o) }
+  | Result.Error(_, msg) ->
+     { Code.input = phrase;
+       output = msg;
+       stdout = "";  stderr = "" }
+
 let run ?out_dir ?open_core ?open_async filename =
   eprintf "C: %s\n%!" filename;
   let out_dir = match out_dir with
@@ -196,40 +131,44 @@ let run ?out_dir ?open_core ?open_async filename =
   in
   let initial_phrases = match open_core with
     | Some x ->
-      if x then initial_phrases @ ["open Core.Std"]
-      else initial_phrases
+       if x then initial_phrases @ ["open Core.Std"]
+       else initial_phrases
     | None -> initial_phrases
   in
   let initial_phrases = match open_async with
     | Some x ->
-      if x then initial_phrases @ ["#require \"async\"";"open Async.Std"]
-      else initial_phrases
+       if x then initial_phrases @ ["#require \"async\"";"open Async.Std"]
+       else initial_phrases
     | None -> initial_phrases
   in
-  reset_toplevel ();
-  List.iter initial_phrases ~f:(fun phrase ->
-    let p = toploop_eval (phrase ^ " ;;") in
-    match p.Code.output with
-    | "" -> ()
-    | _ -> eprintf "ERROR: %s\n%!" p.Code.output
-  );
-  In_channel.read_all filename
-  |> Code.split_parts_exn ~filename
-  |> List.iter ~f:(fun (part,content) ->
-    eprintf "X: %s, part %f\n%s\n\n%!" filename part content;
-    let data =
-      ok_exn (Code.split_toplevel_phrases `Anywhere content)
-      |> List.map ~f:toploop_eval
-      |> <:sexp_of< Code.phrase list >>
-      |> Sexp.to_string
-    in
+  Oloop.create Oloop.Output.separate >>= function
+  | Result.Error e ->
+     return(eprintf "Could not create a toploop for %S\nReason: %s\n"
+                    filename (Error.to_string_hum e))
+  | Result.Ok t ->
+  Deferred.List.iter initial_phrases
+                     ~f:(fun phrase ->
+                         Oloop.eval t phrase >>| function
+                         | Result.Ok _ -> ()
+                         | Error(_, msg) -> eprintf "ERROR: %s\n%!" msg
+                        ) >>= fun () ->
+  let parts =
+    Code.split_parts_exn ~filename (In_channel.read_all filename) in
+  let eval_part (part, content) =
+    eprintf "X: %s, part %f\n%S\n\n%!" filename part content;
+    let data = ok_exn (Code.split_toplevel_phrases `Anywhere content) in
+    Deferred.List.map data ~f:(toploop_eval t) >>| fun data ->
+    let data = <:sexp_of< Code.phrase list >> data
+               |> Sexp.to_string in
     let base = Filename.(basename filename |> chop_extension) in
-    let out_file = sprintf "%s/%s.%f.sexp" out_dir base part in
+    let out_file = sprintf "%s/%s.%f.txt" out_dir base part in
     Out_channel.write_all out_file ~data
-  )
+  in
+  Deferred.List.iter parts ~f:eval_part >>| fun () ->
+  shutdown 0
 
 
-let main : Command.t = Command.basic
+let main = Command.basic
   ~summary:"Run files through the Core toplevel"
   Command.Spec.(
     empty
@@ -243,6 +182,7 @@ let main : Command.t = Command.basic
     +> anon (sequence ("file" %: file))
   )
   (fun out_dir open_core open_async files () ->
-     List.iter files ~f:(run ?out_dir ?open_core ?open_async))
+   ignore(Deferred.List.iter files ~f:(run ?out_dir ?open_core ?open_async));
+   never_returns(Scheduler.go()))
 
 let () = Command.run main

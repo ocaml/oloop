@@ -31,8 +31,8 @@ Executable "oloop-top"
 Executable "oloop"
   Path:           app
   MainIs:         app.ml
-  BuildDepends:   oloop
-  CompiledObject: best
+  BuildDepends:   oloop, compiler-libs.toplevel
+  CompiledObject: byte
   BuildTools:     ocamlbuild
   Install:        true
 
