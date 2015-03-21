@@ -30,7 +30,8 @@ tar: $(DISTFILES)
 
 clean:
 	ocaml setup.ml -$@
-	$(RM) $(PKG_TARBALL) $(wildcard setup.data tests/*.txt)
+	$(RM) $(PKG_TARBALL) $(wildcard setup.data tests/*.txt) \
+	  $(wildcard lib/oloop_conf.ml lib/oloop_ocaml.ml)
 
 .PHONY: all byte native configure doc test install uninstall reinstall \
   clean tar

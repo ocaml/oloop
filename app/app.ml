@@ -15,97 +15,6 @@ let initial_phrases = [
 ]
 
 
-(*** Suppress values beginning with _.  Lifted straight from uTop:
- * uTop_main.ml
- * ------------
- * Copyright : (c) 2011, Jeremie Dimino <jeremie@dimino.org>
- * Licence   : BSD3
- **)
-
-let orig_print_out_signature = !Toploop.print_out_signature
-let orig_print_out_phrase = !Toploop.print_out_phrase
-
-let rec map_items
-    (unwrap : 'a -> Outcometree.out_sig_item * 'b)
-    (wrap : Outcometree.out_sig_item -> 'b -> 'a)
-    (items : 'a list)
-    : 'a list
-    =
-  match items with
-  | [] ->
-    []
-  | item :: items ->
-    let sig_item, _ = unwrap item in
-    let name, _ =
-      match sig_item with
-      | Outcometree.Osig_class (_, name, _, _, rs)
-      | Outcometree.Osig_class_type (_, name, _, _, rs)
-      | Outcometree.Osig_module (name, _, rs)
-      | Outcometree.Osig_type ({Outcometree.otype_name=name;_}, rs) ->
-        (name, rs)
-      | Outcometree.Osig_typext ({Outcometree.oext_name=name;_}, _)
-      | Outcometree.Osig_modtype (name, _)
-      | Outcometree.Osig_value (name, _, _) ->
-        (name, Outcometree.Orec_not)
-    in
-    let keep = name = "" || name.[0] <> '_' in
-    if keep then
-      item :: map_items unwrap wrap items
-    else
-      (* Replace the [Orec_next] at the head of items by [Orec_first] *)
-      let items =
-        match items with
-        | [] ->
-          []
-        | item :: items' ->
-          let sig_item, extra = unwrap item in
-          match sig_item with
-          | Outcometree.Osig_class (a, name, b, c, rs) ->
-            if rs = Outcometree.Orec_next then
-              wrap (Outcometree.Osig_class (a, name, b, c, Outcometree.Orec_first)) extra :: items'
-            else
-              items
-          | Outcometree.Osig_class_type (a, name, b, c, rs) ->
-            if rs = Outcometree.Orec_next then
-              wrap (Outcometree.Osig_class_type (a, name, b, c, Outcometree.Orec_first)) extra :: items'
-            else
-              items
-          | Outcometree.Osig_module (name, a, rs) ->
-            if rs = Outcometree.Orec_next then
-              wrap (Outcometree.Osig_module (name, a, Outcometree.Orec_first)) extra :: items'
-            else
-              items
-          | Outcometree.Osig_type (out_type_decl, rs) ->
-            if rs = Outcometree.Orec_next then
-              wrap (Outcometree.Osig_type (out_type_decl, Outcometree.Orec_first)) extra :: items'
-            else
-              items
-          | Outcometree.Osig_typext _
-          | Outcometree.Osig_modtype _
-          | Outcometree.Osig_value _ ->
-            items
-      in
-      map_items unwrap wrap items
-
-let print_out_signature (pp:Format.formatter) (items : Outcometree.out_sig_item list) : unit =
-  orig_print_out_signature pp (map_items (fun x -> (x, ())) (fun x () -> x) items)
-
-let print_out_phrase (pp:Format.formatter) (phrase:Outcometree.out_phrase) : unit =
-  let phrase =
-    match phrase with
-    | Outcometree.Ophr_eval _
-    | Outcometree.Ophr_exception _ -> phrase
-    | Outcometree.Ophr_signature items ->
-      Outcometree.Ophr_signature (map_items (fun x -> x) (fun x y -> (x, y)) items)
-  in
-  orig_print_out_phrase pp phrase
-
-let () =
-  Toploop.print_out_signature := print_out_signature;
-  Toploop.print_out_phrase := print_out_phrase
-
-(** End of uTop code *)
-
 let string_of_queue q =
   String.concat ~sep:"" (Queue.to_list q)
 
@@ -113,7 +22,7 @@ let toploop_eval t (phrase: string) =
   Oloop.eval t phrase >>| function
   | Result.Ok (out_phrase, o) ->
      let b = Buffer.create 1024 in
-     !Oprint.out_phrase (Format.formatter_of_buffer b) out_phrase;
+     Oloop.print_out_phrase (Format.formatter_of_buffer b) out_phrase;
      { Code.input = phrase;
        output = Buffer.contents b;
        stdout = string_of_queue (Oloop.Output.stdout o);

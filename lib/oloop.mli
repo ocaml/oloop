@@ -79,3 +79,8 @@ val eval : 'a t -> string
 
 
 val location_of_error : error -> Location.t option
+
+val print_out_signature :
+  Format.formatter -> Outcometree.out_sig_item list -> unit
+val print_out_phrase :
+  Format.formatter -> Outcometree.out_phrase -> unit

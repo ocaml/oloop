@@ -108,3 +108,14 @@ let eval t phrase =
   | `Eof ->
      return(Result.Error(`Internal_error End_of_file,
                          "The toploop did not return a result"))
+
+
+(*
+ * Helper functions
+ *)
+
+let print_out_signature =
+  Oloop_ocaml.print_out_signature
+let print_out_phrase =
+  Oloop_ocaml.print_out_phrase
+;;

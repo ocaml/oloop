@@ -12,12 +12,14 @@ Homepage:    https://github.com/agarwal/oloop
 Plugins:     META (0.4), StdFiles (0.4)
 OCamlVersion: >= 4.01.0
 FilesAB:     lib/oloop_conf.ml.ab
+PreConfCommand: ocaml pp.ml
 
 Library "oloop"
   Path:        lib
   BuildTools:  ocamlbuild
   Modules:     Oloop
-  InternalModules: Oloop_types, Oloop_code, Oloop_conf, Oloop_file
+  InternalModules: Oloop_types, Oloop_code, Oloop_conf, Oloop_ocaml,
+                   Oloop_file
   BuildDepends: core_kernel, async, sexplib.syntax, compiler-libs.common
 
 Executable "oloop-top"
