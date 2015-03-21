@@ -94,12 +94,17 @@ let eval t phrase =
   (* FIXME: Maybe the output of the previous phrase was not yet
      collected.  Must use a queue to serialize phrase → outcome *)
   >>= fun () ->
-  Reader.read_marshal t.sock >>= fun out_phrase ->
+  Reader.read_marshal t.sock
+  >>= fun (out_phrase: Oloop_types.out_phrase_or_error Reader.Read_result.t) ->
   let o = { Output.stdout = queue_of_pipe t.out;
-            stderr = queue_of_pipe t.err } in
+            Output.stderr = queue_of_pipe t.err } in
   match out_phrase with
-  | `Ok(Oloop_types.Ok r) -> return(Result.Ok r, o)
-  | `Ok(Oloop_types.Error e) -> return(Result.Error e, o)
+  | `Ok(Oloop_types.Ok r) -> return(Result.Ok(r, o))
+  | `Ok(Oloop_types.Error e) ->
+     (* When the code was not correclty evaluated, the [phrase] is
+        outputted on stdout with terminal codes to underline the error
+        location.  Since we have access to the location, this is useless. *)
+     return(Result.Error e)
   | `Eof ->
      return(Result.Error(`Internal_error End_of_file,
-                         "The toploop did not return a result"), o)
+                         "The toploop did not return a result"))

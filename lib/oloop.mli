@@ -66,8 +66,8 @@ type error =
   | `Internal_error of exn ]
 
 val eval : 'a t -> string
-           -> ((Outcometree.out_phrase, error * string) Result.t
-              * 'a Output.t) Deferred.t
+           -> (Outcometree.out_phrase * 'a Output.t,
+              error * string) Deferred.Result.t
 (** [eval t phrase] evaluate [phrase] in the toploop [t] and returns a
     (deferred) couple [(res, out)] where [res] is the result of
     evaluating the [phrase], an {!Outcometree.out_phrase} if [phrase]

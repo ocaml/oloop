@@ -12,28 +12,27 @@ let string_of_queue q =
 
 let eval t phrase =
   printf "phrase: %S\n%!" phrase;
-  Oloop.eval t phrase >>| fun (res, o) ->
-  (match res with
-  | Result.Ok out_phrase ->
+  Oloop.eval t phrase >>| function
+  | Result.Ok(out_phrase, o) ->
      let b = Buffer.create 1024 in
      !Oprint.out_phrase (formatter_of_buffer b) out_phrase;
      printf "OUTCOME: [%s]\n%!" (Buffer.contents b);
+     printf "OUT: %S\nERR: %S\n%!" (string_of_queue(Oloop.Output.stdout o))
+                                   (string_of_queue(Oloop.Output.stderr o))
+     (* printf "OUT+ERR: %S\n" (string_of_queue(Oloop.Output.stdout o)) *)
   | Result.Error(e, msg) ->
      printf "ERROR: {|%s|}\n" msg;
      (match Oloop.location_of_error e with
       | Some l -> printf "LOCATION: ";
                  Location.print_loc std_formatter l;
                  printf "\n"
-      | None -> ()));
-  printf "OUT: %S\nERR: %S\n%!" (string_of_queue(Oloop.Output.stdout o))
-                              (string_of_queue(Oloop.Output.stderr o))
-(* printf "OUT+ERR: %S\n" (string_of_queue(Oloop.Output.stdout o)) *)
+      | None -> ())
 
 
 include Lexer
 let main () =
   let phrase1 = "open Printf\n\
-                 let f x = x + 1 1\n\
+                 let f x = x + 1\n\
                  let () = printf \"Hello\n\""
   and phrase2 = "let () = eprintf \"err\n%!\"; \n\
                  printf \"out\n%!\";\n\
