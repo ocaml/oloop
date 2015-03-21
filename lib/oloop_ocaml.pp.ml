@@ -6,7 +6,9 @@
  * Licence   : BSD3
  **)
 
-let rec map_items unwrap wrap items =
+let rec map_items (unwrap: 'a -> Outcometree.out_sig_item * 'b)
+                  (wrap: Outcometree.out_sig_item -> 'b -> 'a)
+                  (items: 'a list) : 'a list =
   match items with
   | [] ->
      []
@@ -88,19 +90,15 @@ let rec map_items unwrap wrap items =
        map_items unwrap wrap items
 
 
-let print_out_signature (pp:Format.formatter)
-                        (items : Outcometree.out_sig_item list) : unit =
-  !Oprint.out_signature pp (map_items (fun x -> (x, ())) (fun x () -> x) items)
+let signatures_remove_underscore_names
+      (items : Outcometree.out_sig_item list) =
+  map_items (fun x -> (x, ())) (fun x () -> x) items
 
-let print_out_phrase (pp:Format.formatter)
-                     (phrase:Outcometree.out_phrase) : unit =
-  let phrase =
-    match phrase with
-    | Outcometree.Ophr_eval _
-    | Outcometree.Ophr_exception _ -> phrase
-    | Outcometree.Ophr_signature items ->
-      Outcometree.Ophr_signature (map_items (fun x -> x) (fun x y -> (x, y)) items)
-  in
-  !Oprint.out_phrase pp phrase
+let phrase_remove_underscore_names (phrase:Outcometree.out_phrase) =
+  match phrase with
+  | Outcometree.Ophr_eval _
+  | Outcometree.Ophr_exception _ -> phrase
+  | Outcometree.Ophr_signature items ->
+     Outcometree.Ophr_signature (map_items (fun x -> x) (fun x y -> (x, y)) items)
 
 (* End of uTop code *)

@@ -25,7 +25,6 @@ let initialize_toplevel ~redirect_stderr =
    special channel. *)
 let out_phrase = ref(Outcometree.Ophr_signature []) (* dummy *)
 let () =
-  let std_print_out_phrase = !Toploop.print_out_phrase in
   Toploop.print_out_phrase
   := fun _fmt phrase ->
      out_phrase := phrase

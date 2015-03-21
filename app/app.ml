@@ -21,8 +21,9 @@ let string_of_queue q =
 let toploop_eval t (phrase: string) =
   Oloop.eval t phrase >>| function
   | Result.Ok (out_phrase, o) ->
+     let out_phrase = Oloop.phrase_remove_underscore_names out_phrase in
      let b = Buffer.create 1024 in
-     Oloop.print_out_phrase (Format.formatter_of_buffer b) out_phrase;
+     !Oprint.out_phrase (Format.formatter_of_buffer b) out_phrase;
      { Code.input = phrase;
        output = Buffer.contents b;
        stdout = string_of_queue (Oloop.Output.stdout o);
@@ -73,8 +74,7 @@ let run ?out_dir ?open_core ?open_async filename =
     let out_file = sprintf "%s/%s.%f.txt" out_dir base part in
     Out_channel.write_all out_file ~data
   in
-  Deferred.List.iter parts ~f:eval_part >>| fun () ->
-  shutdown 0
+  Deferred.List.iter parts ~f:eval_part
 
 
 let main = Command.basic
@@ -91,7 +91,8 @@ let main = Command.basic
     +> anon (sequence ("file" %: file))
   )
   (fun out_dir open_core open_async files () ->
-   ignore(Deferred.List.iter files ~f:(run ?out_dir ?open_core ?open_async));
+   ignore(Deferred.List.iter files ~f:(run ?out_dir ?open_core ?open_async)
+          >>| fun () -> shutdown 0);
    never_returns(Scheduler.go()))
 
 let () = Command.run main

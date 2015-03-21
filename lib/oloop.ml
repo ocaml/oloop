@@ -114,8 +114,8 @@ let eval t phrase =
  * Helper functions
  *)
 
-let print_out_signature =
-  Oloop_ocaml.print_out_signature
-let print_out_phrase =
-  Oloop_ocaml.print_out_phrase
+let signatures_remove_underscore_names =
+  Oloop_ocaml.signatures_remove_underscore_names
+let phrase_remove_underscore_names =
+  Oloop_ocaml.phrase_remove_underscore_names
 ;;
