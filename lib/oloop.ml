@@ -74,7 +74,17 @@ let close t =
   Unix.unlink t.sock_path
 
 
-type error = Oloop_types.error
+type eval_error =
+  [ `Lexer of Oloop_ocaml.lexer_error * Oloop_ocaml.Location.t
+  | `Syntaxerr of Oloop_ocaml.syntaxerr_error
+  | `Typedecl of Oloop_ocaml.Location.t * Oloop_ocaml.Typedecl.error
+  | `Typetexp of Oloop_ocaml.Location.t * Oloop_ocaml.Typetexp.error
+  | `Typecore of Oloop_ocaml.Location.t * Oloop_ocaml.Typecore.error
+  ] with sexp
+
+type error =
+  [ eval_error
+  | `Internal_error of Exn.t ]
 
 let location_of_error : error -> Location.t option = function
   | `Lexer(_, l) | `Typedecl(l, _) | `Typetexp(l, _)
@@ -109,6 +119,21 @@ let eval t phrase =
      return(Result.Error(`Internal_error End_of_file,
                          "The toploop did not return a result"))
 
+
+let to_error (e, msg) =
+  match e with
+  | `Internal_error exn ->
+     Error.tag (Error.of_exn exn) msg
+  | #eval_error as e ->
+     let here = match location_of_error e with
+       | Some loc -> Some loc.Location.loc_start
+       | None -> None in
+     Error.create ?here msg e sexp_of_eval_error
+
+let eval_or_error t phrase =
+  eval t phrase >>| function
+  | Result.Ok _ as r -> r
+  | Result.Error err -> Result.Error(to_error err)
 
 (*
  * Helper functions

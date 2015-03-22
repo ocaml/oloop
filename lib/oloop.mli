@@ -57,17 +57,19 @@ val close : _ t -> unit Deferred.t
 (** Terminates the toplevel. *)
 
 
-type error =
+type eval_error =
   [ `Lexer of Lexer.error * Location.t
   | `Syntaxerr of Syntaxerr.error
   | `Typedecl of Location.t * Typedecl.error
   | `Typetexp of Location.t * Typetexp.error
   | `Typecore of Location.t * Typecore.error
-  | `Internal_error of exn ]
+  ] with sexp
 
-val eval : 'a t -> string
-           -> (Outcometree.out_phrase * 'a Output.t,
-              error * string) Deferred.Result.t
+type error = [ eval_error | `Internal_error of exn ]
+
+val eval :
+  'a t -> string
+  -> (Outcometree.out_phrase * 'a Output.t, error * string) Deferred.Result.t
 (** [eval t phrase] evaluate [phrase] in the toploop [t] and returns a
     (deferred) couple [(res, out)] where [res] is the result of
     evaluating the [phrase], an {!Outcometree.out_phrase} if [phrase]
@@ -77,8 +79,18 @@ val eval : 'a t -> string
     message displayed in the toplevel.  In both case, [out] is the
     text outputed on stdout and stderr. *)
 
+val eval_or_error :
+  'a t -> string -> (Outcometree.out_phrase * 'a Output.t) Deferred.Or_error.t
+(** Same as {!eval} except that the error is transformed into an
+   [Error.t] using the function {!to_error}. *)
+
 
 val location_of_error : error -> Location.t option
+(** [location_of_error e] returns the error location if any is present. *)
+
+val to_error : error * string -> Error.t
+(** [to_error(e, msg)] returns an [Error.t] value corresponding to
+    the error [e] with message [msg]. *)
 
 val phrase_remove_underscore_names :
   Outcometree.out_phrase -> Outcometree.out_phrase
