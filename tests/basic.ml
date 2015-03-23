@@ -2,14 +2,6 @@ open Core.Std
 open Async.Std
 open Format
 
-let x () =
-  printf "Hello\n";
-  eprintf "Here\n%!";
-  printf "Hello2\n"
-
-let string_of_queue q =
-  String.concat ~sep:"" (Queue.to_list q)
-
 let eval t phrase =
   printf "phrase: %S\n%!" phrase;
   Oloop.eval t phrase >>| function
@@ -17,9 +9,9 @@ let eval t phrase =
      let b = Buffer.create 1024 in
      !Oprint.out_phrase (formatter_of_buffer b) out_phrase;
      printf "OUTCOME: [%s]\n%!" (Buffer.contents b);
-     printf "OUT: %S\nERR: %S\n%!" (string_of_queue(Oloop.Output.stdout o))
-                                   (string_of_queue(Oloop.Output.stderr o))
-     (* printf "OUT+ERR: %S\n" (string_of_queue(Oloop.Output.stdout o)) *)
+     printf "OUT: %S\nERR: %S\n%!" (Oloop.Output.stdout o)
+                                   (Oloop.Output.stderr o)
+     (* printf "OUT+ERR: %S\n" (Oloop.Output.stdout o) *)
   | Result.Error(e, msg) ->
      printf "ERROR: {|%s|}\n" msg;
      (match Oloop.location_of_error e with

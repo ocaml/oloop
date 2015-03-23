@@ -11,9 +11,13 @@ module Output : sig
     type separate (** Stdout and stderr are collected separately. *)
     type merged   (** Stderr is redirected to stdout. *)
 
-    val stdout : _ t -> string Queue.t
+    val stdout : _ t -> string
 
-    val stderr : separate t -> string Queue.t
+    val stderr : separate t -> string
+
+    val stdout_queue : _ t -> string Queue.t
+
+    val stderr_queue : separate t -> string Queue.t
 
     type 'a kind
     (** Specify whether one wants separate stdout and stderr or not. *)

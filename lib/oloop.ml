@@ -23,8 +23,20 @@ module Output = struct
 
     let separate = false
     let merged = true
-    let stdout t = t.stdout
-    let stderr t = t.stderr
+    let stdout_queue t = t.stdout
+    let stderr_queue t = t.stderr
+
+    let string_of_queue q =
+      let len = Queue.fold q ~init:0 ~f:(fun l s -> l + String.length s) in
+      let buf = Bytes.create len in
+      let pos = ref 0 in
+      Queue.iter q ~f:(fun s -> let len = String.length s in
+                             Bytes.blit s 0 buf !pos len;
+                             pos := !pos + len);
+      buf
+
+    let stdout t = string_of_queue t.stdout
+    let stderr t = string_of_queue t.stderr
   end
 
 let create ?(prog = !default_toplevel) ?(include_dirs=[]) ?init

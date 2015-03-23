@@ -26,8 +26,8 @@ let toploop_eval t (phrase: string) =
      !Oprint.out_phrase (Format.formatter_of_buffer b) out_phrase;
      { Code.input = phrase;
        output = Buffer.contents b;
-       stdout = string_of_queue (Oloop.Output.stdout o);
-       stderr = string_of_queue (Oloop.Output.stderr o) }
+       stdout = Oloop.Output.stdout o;
+       stderr = Oloop.Output.stderr o }
   | Result.Error(_, msg) ->
      { Code.input = phrase;
        output = msg;
