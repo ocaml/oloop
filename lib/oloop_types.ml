@@ -7,6 +7,7 @@ type error =
   | `Typedecl of Location.t * Typedecl.error
   | `Typetexp of Location.t * Typetexp.error
   | `Typecore of Location.t * Typecore.error
+  | `Symtable of Symtable.error
   | `Internal_error of exn ]
 
 (** Outcome of evaluating toplevel phrases.

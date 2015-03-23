@@ -60,6 +60,7 @@ let eval ~msg_with_location lexbuf =
        | Typedecl.Error(l, e) -> `Typedecl(l, e)
        | Typetexp.Error(l, _env, e) -> `Typetexp(l, e)
        | Typecore.Error(l, _env, e) -> `Typecore(l, e)
+       | Symtable.Error e -> `Symtable e
        (* FIXME: add more *)
        | _ -> `Internal_error e in
      Error(err, msg)

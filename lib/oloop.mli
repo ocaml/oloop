@@ -67,6 +67,7 @@ type eval_error =
   | `Typedecl of Location.t * Typedecl.error
   | `Typetexp of Location.t * Typetexp.error
   | `Typecore of Location.t * Typecore.error
+  | `Symtable of Symtable.error
   ] with sexp
 
 type error = [ eval_error | `Internal_error of exn ]

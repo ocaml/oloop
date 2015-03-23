@@ -1084,6 +1084,18 @@ module Typecore = struct
       with sexp
   end
 
+module Symtable = struct
+    type error =
+      Symtable.error =
+        Undefined_global of string
+      | Unavailable_primitive of string
+      | Wrong_vm of string
+      | Uninitialized_global of string
+      with sexp
+  end
+
+
+
 (*** Suppress values beginning with _.  Lifted straight from uTop:
  * uTop_main.ml
  * ------------

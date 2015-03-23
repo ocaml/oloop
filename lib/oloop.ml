@@ -92,6 +92,7 @@ type eval_error =
   | `Typedecl of Oloop_ocaml.Location.t * Oloop_ocaml.Typedecl.error
   | `Typetexp of Oloop_ocaml.Location.t * Oloop_ocaml.Typetexp.error
   | `Typecore of Oloop_ocaml.Location.t * Oloop_ocaml.Typecore.error
+  | `Symtable of Oloop_ocaml.Symtable.error
   ] with sexp
 
 type error =
@@ -101,7 +102,7 @@ type error =
 let location_of_error : error -> Location.t option = function
   | `Lexer(_, l) | `Typedecl(l, _) | `Typetexp(l, _)
   | `Typecore(l, _) -> Some l
-  | `Syntaxerr _ | `Internal_error _ -> None
+  | `Syntaxerr _ | `Symtable _ | `Internal_error _ -> None
 
 let queue_of_pipe p =
   match Pipe.read_now' p with
@@ -126,7 +127,7 @@ let eval t phrase =
      (* When the code was not correclty evaluated, the [phrase] is
         outputted on stdout with terminal codes to underline the error
         location.  Since we have access to the location, this is useless. *)
-     return(Result.Error e)
+     return(Result.Error(e: error * string))
   | `Eof ->
      return(Result.Error(`Internal_error End_of_file,
                          "The toploop did not return a result"))
