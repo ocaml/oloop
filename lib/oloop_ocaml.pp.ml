@@ -20,7 +20,7 @@ type lexer_error =
   | Illegal_escape of string
   | Unterminated_comment of Location.t
   | Unterminated_string
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
   | Unterminated_string_in_comment of Location.t * Location.t
 #else
   | Unterminated_string_in_comment of Location.t
@@ -33,13 +33,13 @@ type syntaxerr_error =
   Syntaxerr.error =
   | Unclosed of Location.t * string * Location.t * string
   | Expecting of Location.t * string
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
   | Not_expecting of Location.t * string
 #endif
   | Applicative_path of Location.t
   | Variable_in_scope of Location.t * string
   | Other of Location.t
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
   | Ill_formed_ast of Location.t * string
 #endif
   with sexp
@@ -72,7 +72,7 @@ module Asttypes = struct
       Asttypes.constant =
         Const_int of int
       | Const_char of char
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
       | Const_string of string * string option
 #else
       | Const_string of string
@@ -87,7 +87,7 @@ module Asttypes = struct
       Asttypes.rec_flag =
       | Nonrecursive
       | Recursive
-#if OCAML_VERSION < (4, 02, 0)
+#if ocaml_version < (4, 02)
       | Default
 #endif
       with sexp
@@ -111,7 +111,7 @@ module Asttypes = struct
           loc : Location.t;
         } with sexp
 
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
     type variance =
       Asttypes.variance =
       | Covariant
@@ -124,7 +124,7 @@ module Asttypes = struct
 module Parsetree = struct
     open Asttypes
 
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
     type attribute = string loc * payload
      and extension = string loc * payload
      and attributes = attribute list
@@ -140,7 +140,7 @@ module Parsetree = struct
          {
            ptyp_desc: core_type_desc;
            ptyp_loc: Location.t;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            ptyp_attributes: attributes;
 #endif
          }
@@ -151,7 +151,7 @@ module Parsetree = struct
        | Ptyp_arrow of label * core_type * core_type
        | Ptyp_tuple of core_type list
        | Ptyp_constr of Longident.t loc * core_type list
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Ptyp_object of (string * attributes * core_type) list * closed_flag
        | Ptyp_class of Longident.t loc * core_type list
 #else
@@ -159,19 +159,19 @@ module Parsetree = struct
        | Ptyp_class of Longident.t loc * core_type list * label list
 #endif
        | Ptyp_alias of core_type * string
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Ptyp_variant of row_field list * closed_flag * label list option
 #else
        | Ptyp_variant of row_field list * bool * label list option
 #endif
        | Ptyp_poly of string list * core_type
        | Ptyp_package of package_type
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Ptyp_extension of extension
 #endif
      and package_type =
        Longident.t loc * (Longident.t loc * core_type) list
-#if OCAML_VERSION < (4, 02, 0)
+#if ocaml_version < (4, 02)
      and core_field_type =
        Parsetree.core_field_type =
        { pfield_desc: core_field_desc;
@@ -183,7 +183,7 @@ module Parsetree = struct
 #endif
      and row_field =
        Parsetree.row_field =
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Rtag of label * attributes * bool * core_type list
 #else
        | Rtag of label * bool * core_type list
@@ -194,7 +194,7 @@ module Parsetree = struct
          {
            ppat_desc: pattern_desc;
            ppat_loc: Location.t;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            ppat_attributes: attributes; (* ... [@id1] [@id2] *)
 #endif
          }
@@ -204,11 +204,11 @@ module Parsetree = struct
        | Ppat_var of string loc
        | Ppat_alias of pattern * string loc
        | Ppat_constant of constant
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Ppat_interval of constant * constant
 #endif
        | Ppat_tuple of pattern list
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Ppat_construct of Longident.t loc * pattern option
 #else
        | Ppat_construct of Longident.t loc * pattern option * bool
@@ -221,7 +221,7 @@ module Parsetree = struct
        | Ppat_type of Longident.t loc
        | Ppat_lazy of pattern
        | Ppat_unpack of string loc
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Ppat_exception of pattern
        | Ppat_extension of extension
 #endif
@@ -231,7 +231,7 @@ module Parsetree = struct
          {
            pexp_desc: expression_desc;
            pexp_loc: Location.t;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            pexp_attributes: attributes; (* ... [@id1] [@id2] *)
 #endif
          }
@@ -239,7 +239,7 @@ module Parsetree = struct
        Parsetree.expression_desc =
        | Pexp_ident of Longident.t loc
        | Pexp_constant of constant
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Pexp_let of rec_flag * value_binding list * expression
        | Pexp_function of case list
        | Pexp_fun of label * expression option * pattern * expression
@@ -248,7 +248,7 @@ module Parsetree = struct
        | Pexp_function of label * expression option * (pattern * expression) list
 #endif
        | Pexp_apply of expression * (label * expression) list
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Pexp_match of expression * case list
        | Pexp_try of expression * case list
 #else
@@ -256,7 +256,7 @@ module Parsetree = struct
        | Pexp_try of expression * (pattern * expression) list
 #endif
        | Pexp_tuple of expression list
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Pexp_construct of Longident.t loc * expression option
 #else
        | Pexp_construct of Longident.t loc * expression option * bool
@@ -269,7 +269,7 @@ module Parsetree = struct
        | Pexp_ifthenelse of expression * expression * expression option
        | Pexp_sequence of expression * expression
        | Pexp_while of expression * expression
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Pexp_for of
            pattern *  expression * expression * direction_flag * expression
        | Pexp_constraint of expression * core_type
@@ -286,7 +286,7 @@ module Parsetree = struct
        | Pexp_override of (string loc * expression) list
        | Pexp_letmodule of string loc * module_expr * expression
        | Pexp_assert of expression
-#if OCAML_VERSION < (4, 02, 0)
+#if ocaml_version < (4, 02)
        | Pexp_assertfalse
 #endif
        | Pexp_lazy of expression
@@ -295,7 +295,7 @@ module Parsetree = struct
        | Pexp_newtype of string * expression
        | Pexp_pack of module_expr
        | Pexp_open of override_flag * Longident.t loc * expression
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Pexp_extension of extension
      and case =
        Parsetree.case =
@@ -309,12 +309,12 @@ module Parsetree = struct
      and value_description =
        Parsetree.value_description =
          {
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            pval_name: string loc;
 #endif
            pval_type: core_type;
            pval_prim: string list;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            pval_attributes: attributes;
 #endif
            pval_loc: Location.t;
@@ -323,7 +323,7 @@ module Parsetree = struct
      and type_declaration =
        Parsetree.type_declaration =
          {
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            ptype_name: string loc;
            ptype_params: (core_type * variance) list;
 #else
@@ -333,14 +333,14 @@ module Parsetree = struct
            ptype_kind: type_kind;
            ptype_private: private_flag;
            ptype_manifest: core_type option;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            ptype_attributes: attributes;
 #else
            ptype_variance: (bool * bool) list;
 #endif
            ptype_loc: Location.t;
          }
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
      and type_kind =
        Parsetree.type_kind =
        | Ptype_abstract
@@ -402,7 +402,7 @@ module Parsetree = struct
          {
            pcty_desc: class_type_desc;
            pcty_loc: Location.t;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            pcty_attributes: attributes; (* ... [@id1] [@id2] *)
 #endif
          }
@@ -410,7 +410,7 @@ module Parsetree = struct
        Parsetree.class_type_desc =
        | Pcty_constr of Longident.t loc * core_type list
        | Pcty_signature of class_signature
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Pcty_arrow of label * core_type * class_type
        | Pcty_extension of extension
 #else
@@ -421,7 +421,7 @@ module Parsetree = struct
          {
            pcsig_self: core_type;
            pcsig_fields: class_type_field list;
-#if OCAML_VERSION < (4, 02, 0)
+#if ocaml_version < (4, 02)
            pcsig_loc: Location.t;
 #endif
          }
@@ -430,13 +430,13 @@ module Parsetree = struct
          {
            pctf_desc: class_type_field_desc;
            pctf_loc: Location.t;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            pctf_attributes: attributes; (* ... [@@id1] [@@id2] *)
 #endif
          }
      and class_type_field_desc =
        Parsetree.class_type_field_desc =
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Pctf_inherit of class_type
        | Pctf_val of (string * mutable_flag * virtual_flag * core_type)
        | Pctf_method  of (string * private_flag * virtual_flag * core_type)
@@ -454,18 +454,18 @@ module Parsetree = struct
        'a Parsetree.class_infos =
          {
            pci_virt: virtual_flag;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            pci_params: (core_type * variance) list;
 #else
            pci_params: string loc list * Location.t;
 #endif
            pci_name: string loc;
            pci_expr: 'a;
-#if OCAML_VERSION < (4, 02, 0)
+#if ocaml_version < (4, 02)
            pci_variance: (bool * bool) list;
 #endif
            pci_loc: Location.t;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            pci_attributes: attributes;  (* ... [@@id1] [@@id2] *)
 #endif
          }
@@ -476,7 +476,7 @@ module Parsetree = struct
          {
            pcl_desc: class_expr_desc;
            pcl_loc: Location.t;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            pcl_attributes: attributes; (* ... [@id1] [@id2] *)
 #endif
          }
@@ -486,19 +486,19 @@ module Parsetree = struct
        | Pcl_structure of class_structure
        | Pcl_fun of label * expression option * pattern * class_expr
        | Pcl_apply of class_expr * (label * expression) list
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Pcl_let of rec_flag * value_binding list * class_expr
 #else
        | Pcl_let of rec_flag * (pattern * expression) list * class_expr
 #endif
        | Pcl_constraint of class_expr * class_type
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Pcl_extension of extension
 #endif
      and class_structure =
        Parsetree.class_structure =
          {
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            pcstr_self: pattern;
 #else
            pcstr_pat: pattern;
@@ -510,11 +510,11 @@ module Parsetree = struct
        {
          pcf_desc: class_field_desc;
          pcf_loc: Location.t;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
          pcf_attributes: attributes; (* ... [@@id1] [@@id2] *)
 #endif
        }
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
      and class_field_desc =
        Parsetree.class_field_desc =
        | Pcf_inherit of override_flag * class_expr * string option
@@ -546,7 +546,7 @@ module Parsetree = struct
          {
            pmty_desc: module_type_desc;
            pmty_loc: Location.t;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            pmty_attributes: attributes; (* ... [@id1] [@id2] *)
 #endif
          }
@@ -554,7 +554,7 @@ module Parsetree = struct
        Parsetree.module_type_desc =
        | Pmty_ident of Longident.t loc
        | Pmty_signature of signature
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Pmty_functor of string loc * module_type option * module_type
        | Pmty_with of module_type * with_constraint list
 #else
@@ -562,7 +562,7 @@ module Parsetree = struct
        | Pmty_with of module_type * (Longident.t loc * with_constraint) list
 #endif
        | Pmty_typeof of module_expr
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Pmty_extension of extension
        | Pmty_alias of Longident.t loc
 #endif
@@ -573,7 +573,7 @@ module Parsetree = struct
            psig_desc: signature_item_desc;
            psig_loc: Location.t;
          }
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
      and signature_item_desc =
        Parsetree.signature_item_desc =
        | Psig_value of value_description
@@ -658,7 +658,7 @@ module Parsetree = struct
          {
            pmod_desc: module_expr_desc;
            pmod_loc: Location.t;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
            pmod_attributes: attributes; (* ... [@id1] [@id2] *)
 #endif
          }
@@ -666,7 +666,7 @@ module Parsetree = struct
        Parsetree.module_expr_desc =
        | Pmod_ident of Longident.t loc
        | Pmod_structure of structure
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Pmod_functor of string loc * module_type option * module_expr
 #else
        | Pmod_functor of string loc * module_type * module_expr
@@ -674,7 +674,7 @@ module Parsetree = struct
        | Pmod_apply of module_expr * module_expr
        | Pmod_constraint of module_expr * module_type
        | Pmod_unpack of expression
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Pmod_extension of extension
 #endif
      and structure = structure_item list
@@ -684,7 +684,7 @@ module Parsetree = struct
            pstr_desc: structure_item_desc;
            pstr_loc: Location.t;
          }
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
      and structure_item_desc =
        Parsetree.structure_item_desc =
        | Pstr_eval of expression * attributes
@@ -811,7 +811,7 @@ module Types = struct
           lbl_all: label_description array;
           lbl_repres: record_representation;
           lbl_private: private_flag;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
           lbl_loc: Location.t;
           lbl_attributes: Parsetree.attributes;
 #endif
@@ -847,12 +847,12 @@ module Types = struct
         type_newtype_level: (int * int) option;
         (* definition level * expansion level *)
         type_loc: Location.t;
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
         type_attributes: Parsetree.attributes;
 #endif
       }
 
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
       and type_kind =
         Types.type_kind =
           Type_abstract
@@ -944,7 +944,7 @@ module Typedecl = struct
       | Too_many_constructors
       | Duplicate_label of string
       | Recursive_abbrev of string
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
       | Cycle_in_def of string * type_expr
 #endif
       | Definition_mismatch of type_expr * Includecore.type_mismatch list
@@ -955,7 +955,7 @@ module Typedecl = struct
       | Null_arity_external
       | Missing_native_external
       | Unbound_type_var of type_expr * type_declaration
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
       | Not_open_type of Path.t
       | Not_extensible_type of Path.t
       | Extension_mismatch of Path.t * Includecore.type_mismatch list
@@ -969,7 +969,7 @@ module Typedecl = struct
       | Bad_variance of int * (bool*bool*bool) * (bool*bool*bool)
       | Unavailable_type_constructor of Path.t
       | Bad_fixed_type of string
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
       | Unbound_type_var_ext of type_expr * extension_constructor
 #else
       | Unbound_type_var_exc of type_expr * type_expr
@@ -1010,7 +1010,7 @@ module Typetexp = struct
       | Unbound_cltype of Longident.t
       | Ill_typed_functor_application of Longident.t
       | Illegal_reference_to_recursive_module
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
       | Access_functor_as_structure of Longident.t
 #endif
       with sexp
@@ -1026,7 +1026,7 @@ module Typecore = struct
       | Constructor_arity_mismatch of Longident.t * int * int
       | Label_mismatch of Longident.t * (type_expr * type_expr) list
       | Pattern_type_clash of (type_expr * type_expr) list
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
       | Or_pattern_type_clash of Ident.t * (type_expr * type_expr) list
 #endif
       | Multiply_bound_variable of string
@@ -1037,14 +1037,14 @@ module Typecore = struct
       | Label_multiply_defined of string
       | Label_missing of Ident.t list
       | Label_not_mutable of Longident.t
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
       | Wrong_name of string * type_expr * string * Path.t * Longident.t
 #else
       | Wrong_name of string * Path.t * Longident.t
 #endif
       | Name_type_mismatch of
           string * Longident.t * (Path.t * Path.t) * (Path.t * Path.t) list
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
       | Invalid_format of string
 #else
       | Incomplete_format of string
@@ -1075,7 +1075,7 @@ module Typecore = struct
       | Recursive_local_constraint of (type_expr * type_expr) list
       | Unexpected_existential
       | Unqualified_gadt_pattern of Path.t * string
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
       | Invalid_interval
       | Invalid_for_loop_index
       | No_value_clauses
@@ -1116,13 +1116,13 @@ let rec map_items (unwrap: 'a -> Outcometree.out_sig_item * 'b)
        | Outcometree.Osig_class (_, name, _, _, rs)
        | Outcometree.Osig_class_type (_, name, _, _, rs)
        | Outcometree.Osig_module (name, _, rs)
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Outcometree.Osig_type ({ Outcometree.otype_name = name }, rs) ->
 #else
        | Outcometree.Osig_type ((name, _, _, _, _), rs) ->
 #endif
           (name, rs)
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
        | Outcometree.Osig_typext ({ Outcometree.oext_name = name}, _)
 #else
        | Outcometree.Osig_exception (name, _)
@@ -1130,7 +1130,7 @@ let rec map_items (unwrap: 'a -> Outcometree.out_sig_item * 'b)
        | Outcometree.Osig_modtype (name, _)
        | Outcometree.Osig_value (name, _, _) ->
           (name, Outcometree.Orec_not)
-#if OCAML_VERSION >= (4, 03, 0)
+#if ocaml_version >= (4, 03)
        | Outcometree.Osig_ellipsis -> ("", Outcometree.Orec_not)
 #endif
      in
@@ -1172,12 +1172,12 @@ let rec map_items (unwrap: 'a -> Outcometree.out_sig_item * 'b)
                          (oty, Outcometree.Orec_first)) extra :: items'
                else
                  items
-#if OCAML_VERSION >= (4, 02, 0)
+#if ocaml_version >= (4, 02)
             | Outcometree.Osig_typext _
 #else
             | Outcometree.Osig_exception _
 #endif
-#if OCAML_VERSION >= (4, 03, 0)
+#if ocaml_version >= (4, 03)
             | Outcometree.Osig_ellipsis
 #endif
             | Outcometree.Osig_modtype _

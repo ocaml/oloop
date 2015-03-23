@@ -12,7 +12,7 @@ Homepage:    https://github.com/agarwal/oloop
 Plugins:     META (0.4), StdFiles (0.4)
 OCamlVersion: >= 4.01.0
 FilesAB:     lib/oloop_conf.ml.ab
-PreBuildCommand: ocaml pp.ml
+PreBuildCommand: optcomp-o lib/oloop_ocaml.pp.ml > lib/oloop_ocaml.ml
 
 Library "oloop"
   Path:        lib
