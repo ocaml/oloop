@@ -7,7 +7,7 @@ Synopsis:    Evaluate code through the OCaml toploop.
 Authors:     Ashish Agarwal, Christophe Troestler
 Maintainers: Ashish Agarwal <agarwal1975@gmail.com>,
              Christophe Troestler <Christophe.Troestler@umons.ac.be>
-License:     GPL-3 with OCaml linking exception
+License:     ISC
 Homepage:    https://github.com/agarwal/oloop
 Plugins:     META (0.4), StdFiles (0.4)
 OCamlVersion: >= 4.01.0
