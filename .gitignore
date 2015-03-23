@@ -1,8 +1,5 @@
 /_build
 /tmp
-/.omakedb
-/.omakedb.lock
-/OMakeroot.omc
 /setup.data
 /setup.log
 /setup.ml
