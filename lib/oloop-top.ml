@@ -4,6 +4,13 @@
 
 open Oloop_types
 
+(* Force the linking of some modules for, say, #load "camlp4o.cma" *)
+module S___ = Stream
+module Q___ = Queue
+module C___ = CamlinternalOO
+module D___ = Dynlink
+module St__ = StdLabels
+
 let initialize_toplevel ~redirect_stderr =
   Sys.interactive := true;
   Toploop.set_paths ();
