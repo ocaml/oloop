@@ -1,4 +1,5 @@
 /_build
+*.bak
 /tmp
 /setup.data
 /setup.log

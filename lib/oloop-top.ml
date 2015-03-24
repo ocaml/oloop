@@ -10,6 +10,7 @@ module Q___ = Queue
 module C___ = CamlinternalOO
 module D___ = Dynlink
 module St__ = StdLabels
+module Cp__ = Complex
 
 let initialize_toplevel ~redirect_stderr =
   Sys.interactive := true;
