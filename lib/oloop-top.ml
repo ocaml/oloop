@@ -31,11 +31,11 @@ let initialize_toplevel ~redirect_stderr =
 (* This special toplevel will not print the result of the evaluation
    of phrases but store it to transmit it in its original form in a
    special channel. *)
-let out_phrase = ref(Outcometree.Ophr_signature []) (* dummy *)
+let out_phrase = ref(Oloop_types.Signature []) (* dummy *)
 let () =
   Toploop.print_out_phrase
   := fun _fmt phrase ->
-     out_phrase := phrase
+     out_phrase := Oloop_types.of_outcometree_phrase phrase
 
 let eval ~msg_with_location lexbuf =
   try
@@ -90,8 +90,6 @@ let main ~msg_with_location ~redirect_stderr ~sock_name =
     flush stdout;
     Format.pp_print_flush Format.err_formatter ();
     flush stderr;
-    (* FIXME: Outcometree.out_value may contain a closure in Oval_printer,
-       we must filter that out. *)
     send_out_phrase_or_error ch outcome;
   done
 

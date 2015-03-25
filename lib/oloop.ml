@@ -122,7 +122,8 @@ let eval t phrase =
   let o = { Output.stdout = queue_of_pipe t.out;
             Output.stderr = queue_of_pipe t.err } in
   match out_phrase with
-  | `Ok(Oloop_types.Ok r) -> return(Result.Ok(r, o))
+  | `Ok(Oloop_types.Ok r) ->
+     return(Result.Ok(Oloop_types.to_outcometree_phrase r, o))
   | `Ok(Oloop_types.Error e) ->
      (* When the code was not correclty evaluated, the [phrase] is
         outputted on stdout with terminal codes to underline the error
