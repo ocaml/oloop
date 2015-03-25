@@ -86,6 +86,19 @@ let close t =
   Unix.unlink t.sock_path
 
 
+let with_toploop ?prog ?include_dirs ?init ?no_app_functors ?principal
+                 ?rectypes ?short_paths ?strict_sequence ?msg_with_location
+                 output_merged ~f =
+  create ?prog ?include_dirs ?init ?no_app_functors ?principal
+         ?rectypes ?short_paths ?strict_sequence ?msg_with_location
+         output_merged
+  >>= function
+  | Result.Ok t -> f t
+                  >>= fun r -> close t
+                  >>= fun () -> return r
+  | Result.Error _ as e -> return e
+
+
 type eval_error =
   [ `Lexer of Oloop_ocaml.lexer_error * Oloop_ocaml.Location.t
   | `Syntaxerr of Oloop_ocaml.syntaxerr_error

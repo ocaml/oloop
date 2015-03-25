@@ -60,6 +60,21 @@ val create : ?prog: string ->
 val close : _ t -> unit Deferred.t
 (** Terminates the toplevel. *)
 
+val with_toploop :
+  ?prog: string ->
+  ?include_dirs: string list ->
+  ?init: string ->
+  ?no_app_functors: bool ->
+  ?principal: bool ->
+  ?rectypes: bool ->
+  ?short_paths: bool ->
+  ?strict_sequence: bool ->
+  ?msg_with_location: bool ->
+  'a Output.kind -> f:('a t -> 'b Deferred.Or_error.t) -> 'b Deferred.Or_error.t
+(** [with_toploop kind f] will run [f], closing the toploop and
+    freeing its resources whether [f] returns a result or an error.
+    This is convenient in order use to the bind operator [>>=?] to
+    chain computations in [f]. *)
 
 type eval_error =
   [ `Lexer of Lexer.error * Location.t

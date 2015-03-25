@@ -4,16 +4,18 @@ open Format
 
 
 let main () =
-  Oloop.create Oloop.Output.separate >>=? fun t ->
-  Oloop.eval_or_error t "#use \"topfind\"" >>=? fun _ ->
-  Oloop.eval_or_error t "#require \"lacaml\"" >>=? fun _ ->
-  let phrase = "open Lacaml.D
-                let x = Vec.make0 3" in
-  Oloop.eval_or_error t phrase >>=? fun (out_phrase, o) ->
-  !Oprint.out_phrase std_formatter out_phrase;
-  printf "OUT: %s\n" (Oloop.Output.stdout o);
+  let eval_phrases t =
+    Oloop.eval_or_error t "#use \"topfind\"" >>=? fun _ ->
+    Oloop.eval_or_error t "#require \"lacaml\"" >>=? fun _ ->
+    let phrase = "open Lacaml.D
+                  let x = Vec.make0 3" in
+    Oloop.eval_or_error t phrase >>=? fun (out_phrase, o) ->
+    !Oprint.out_phrase std_formatter out_phrase;
+    printf "OUT: %s\n" (Oloop.Output.stdout o);
+    return(Result.Ok())
+  in
+  Oloop.with_toploop Oloop.Output.separate ~f:eval_phrases
 
-  Oloop.close t >>| fun () -> Result.Ok()
 
 let () =
   ignore(main() >>| function
