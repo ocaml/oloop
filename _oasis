@@ -39,12 +39,12 @@ Executable "oloop"
   BuildTools:     ocamlbuild
   Install:        true
 
-
+# Tests
 Executable "basic"
   Path:           tests
   Build$:         flag(tests)
-  MainIs:         basic.ml
-  BuildDepends:   oloop, bytes
+  MainIs:         test_basic.ml
+  BuildDepends:   oloop
   CompiledObject: best
   BuildTools:     ocamlbuild
   Install:        false
@@ -52,8 +52,8 @@ Executable "basic"
 Executable "require"
   Path:           tests
   Build$:         flag(tests)
-  MainIs:         require.ml
-  BuildDepends:   oloop, bytes
+  MainIs:         test_require.ml
+  BuildDepends:   oloop
   CompiledObject: best
   BuildTools:     ocamlbuild
   Install:        false
