@@ -49,6 +49,15 @@ Executable "basic"
   BuildTools:     ocamlbuild
   Install:        false
 
+Executable "require"
+  Path:           tests
+  Build$:         flag(tests)
+  MainIs:         require.ml
+  BuildDepends:   oloop, bytes
+  CompiledObject: best
+  BuildTools:     ocamlbuild
+  Install:        false
+
 
 SourceRepository master
   Type:     git
