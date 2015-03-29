@@ -1,15 +1,6 @@
 open Core.Std
 open Async.Std
 
-type t = string Float.Map.t
-
-type phrase = {
-  input : string;
-  output : string;
-  stdout : string;
-  stderr : string;
-} with sexp
-
 (** [line_to_part filename line] parses the part number from a
     line. [None] is returned if the line does not indicate the start
     of a new part. [Error] is returned if the line does indicate start

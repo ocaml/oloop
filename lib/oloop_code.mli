@@ -1,13 +1,6 @@
 open Core.Std
 open Async.Std
 
-type phrase = {
-  input : string;
-  output : string;
-  stdout : string;
-  stderr : string;
-} with sexp
-
 (** Split given file contents into its parts. The [filename] is only
     for error messages. *)
 val split_parts_exn
