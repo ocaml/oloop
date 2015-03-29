@@ -8,8 +8,9 @@ open Async.Std
     [filename] is only for error messages. *)
 let line_to_part filename line : float option Or_error.t =
   let lstripped = String.lstrip line in
-  if String.is_prefix ~prefix:"(* part " lstripped then (
-    try Ok (Some (Scanf.sscanf lstripped "(* part %f *)" ident))
+  if String.is_prefix ~prefix:"(* Part " lstripped
+    || String.is_prefix ~prefix:"(* part " lstripped then (
+    try Ok (Some (Scanf.sscanf lstripped "(* %_s %f *)" ident))
     with _ ->
       error "invalid (* part N *) line"
         (filename,line) <:sexp_of< string * string >>
