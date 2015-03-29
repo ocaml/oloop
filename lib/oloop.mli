@@ -123,3 +123,11 @@ val phrase_remove_underscore_names :
 
 val signatures_remove_underscore_names :
   Outcometree.out_sig_item list -> Outcometree.out_sig_item list
+
+
+module Location : sig
+    include module type of Location with type t = Location.t
+
+    val sexp_of_t : t -> Sexp.t
+    val t_of_sexp : Sexp.t -> t
+  end

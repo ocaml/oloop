@@ -169,11 +169,19 @@ let eval_or_error t phrase =
   | Result.Error err -> Result.Error(to_error err)
 
 (*
- * Helper functions
+ * Helper functions and modules
  *)
 
 let signatures_remove_underscore_names =
   Oloop_ocaml.signatures_remove_underscore_names
 let phrase_remove_underscore_names =
   Oloop_ocaml.phrase_remove_underscore_names
+
+
+module Location = struct
+    include Location
+
+    let sexp_of_t = Oloop_ocaml.Location.sexp_of_t
+    let t_of_sexp = Oloop_ocaml.Location.t_of_sexp
+  end
 ;;
