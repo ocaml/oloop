@@ -35,13 +35,13 @@ module Output : sig
 val create : ?prog: string ->
              ?include_dirs: string list ->
              ?init: string ->
-             ?no_app_functors: bool ->
-             ?principal: bool ->
-             ?rectypes: bool ->
-             ?short_paths: bool ->
-             ?strict_sequence: bool ->
-             ?msg_with_location: bool ->
-             ?silent_directives: bool ->
+             ?no_app_functors: unit ->
+             ?principal: unit ->
+             ?rectypes: unit ->
+             ?short_paths: unit ->
+             ?strict_sequence: unit ->
+             ?msg_with_location: unit ->
+             ?silent_directives: unit ->
              'a Output.kind -> 'a t Or_error.t Deferred.t
 (** Create a new toploop.
 
@@ -50,8 +50,8 @@ val create : ?prog: string ->
     [strict_sequence] correspond activate toploop flags.  By default,
     they are not provided.
 
-    @param msg_with_location make error messages returned by {!eval}
-    contain the location of the error (default: [false]).  The
+    @param msg_with_location if provided, make error messages returned
+    by {!eval} contain the location of the error.  The
     location is always accessible using {!location_of_error} which can
     be used to highlight the problematic part of the phrase.
 
@@ -69,13 +69,13 @@ val with_toploop :
   ?prog: string ->
   ?include_dirs: string list ->
   ?init: string ->
-  ?no_app_functors: bool ->
-  ?principal: bool ->
-  ?rectypes: bool ->
-  ?short_paths: bool ->
-  ?strict_sequence: bool ->
-  ?msg_with_location: bool ->
-  ?silent_directives: bool ->
+  ?no_app_functors: unit ->
+  ?principal: unit ->
+  ?rectypes: unit ->
+  ?short_paths: unit ->
+  ?strict_sequence: unit ->
+  ?msg_with_location: unit ->
+  ?silent_directives: unit ->
   'a Output.kind -> f:('a t -> 'b Deferred.Or_error.t) -> 'b Deferred.Or_error.t
 (** [with_toploop kind f] will run [f], closing the toploop and
     freeing its resources whether [f] returns a result or an error.

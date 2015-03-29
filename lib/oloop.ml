@@ -39,12 +39,13 @@ module Output = struct
     let stderr t = string_of_queue t.stderr
   end
 
+let present = function
+  | Some () -> true
+  | None -> false
+
 let create ?(prog = !default_toplevel) ?(include_dirs=[]) ?init
-           ?(no_app_functors = false) ?(principal = false)
-           ?(rectypes = false) ?(short_paths = false)
-           ?(strict_sequence = false)
-           ?(msg_with_location = false)
-           ?(silent_directives = false)
+           ?no_app_functors ?principal ?rectypes ?short_paths
+           ?strict_sequence ?msg_with_location ?silent_directives
            output_merged =
   let sock_path = Filename.temp_file "oloop" ".fifo" in
   Unix.unlink sock_path >>= fun () ->
@@ -57,14 +58,16 @@ let create ?(prog = !default_toplevel) ?(include_dirs=[]) ?init
                        ~f:(fun args dir -> "-I" :: dir :: args) in
   let args = match init with Some fn -> "--init" :: fn :: args
                            | None -> args in
-  let args = if no_app_functors then "--no-app-funct" :: args else args in
-  let args = if principal then "--principal" :: args else args in
-  let args = if rectypes then "--rectypes" :: args else args in
-  let args = if short_paths then "--short-paths" :: args else args in
-  let args = if strict_sequence then "--strict-sequence" :: args else args in
-  let args = if msg_with_location then "--msg-with-location" :: args
+  let args = if present no_app_functors then "--no-app-funct" :: args
              else args in
-  let args = if silent_directives then "--silent-directives" :: args
+  let args = if present principal then "--principal" :: args else args in
+  let args = if present rectypes then "--rectypes" :: args else args in
+  let args = if present short_paths then "--short-paths" :: args else args in
+  let args = if present strict_sequence then "--strict-sequence" :: args
+             else args in
+  let args = if present msg_with_location then "--msg-with-location" :: args
+             else args in
+  let args = if present silent_directives then "--silent-directives" :: args
              else args in
   let args = if output_merged then "--redirect-stderr" :: args else args in
   Process.create ~prog ~args () >>=? fun proc ->

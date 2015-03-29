@@ -17,7 +17,7 @@ let main () =
     return(Result.Ok())
   in
   Oloop.with_toploop Oloop.Output.separate ~f:eval_phrases
-                     ~silent_directives:true
+                     ~silent_directives:()
 
 let () =
   ignore(main() >>| function
