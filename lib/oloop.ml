@@ -44,6 +44,7 @@ let create ?(prog = !default_toplevel) ?(include_dirs=[]) ?init
            ?(rectypes = false) ?(short_paths = false)
            ?(strict_sequence = false)
            ?(msg_with_location = false)
+           ?(silent_directives = false)
            output_merged =
   let sock_path = Filename.temp_file "oloop" ".fifo" in
   Unix.unlink sock_path >>= fun () ->
@@ -62,6 +63,8 @@ let create ?(prog = !default_toplevel) ?(include_dirs=[]) ?init
   let args = if short_paths then "--short-paths" :: args else args in
   let args = if strict_sequence then "--strict-sequence" :: args else args in
   let args = if msg_with_location then "--msg-with-location" :: args
+             else args in
+  let args = if silent_directives then "--silent-directives" :: args
              else args in
   let args = if output_merged then "--redirect-stderr" :: args else args in
   Process.create ~prog ~args () >>=? fun proc ->
@@ -88,10 +91,10 @@ let close t =
 
 let with_toploop ?prog ?include_dirs ?init ?no_app_functors ?principal
                  ?rectypes ?short_paths ?strict_sequence ?msg_with_location
-                 output_merged ~f =
+                 ?silent_directives output_merged ~f =
   create ?prog ?include_dirs ?init ?no_app_functors ?principal
          ?rectypes ?short_paths ?strict_sequence ?msg_with_location
-         output_merged
+         ?silent_directives output_merged
   >>= function
   | Result.Ok t -> f t
                   >>= fun r -> close t

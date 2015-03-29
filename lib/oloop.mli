@@ -41,6 +41,7 @@ val create : ?prog: string ->
              ?short_paths: bool ->
              ?strict_sequence: bool ->
              ?msg_with_location: bool ->
+             ?silent_directives: bool ->
              'a Output.kind -> 'a t Or_error.t Deferred.t
 (** Create a new toploop.
 
@@ -49,13 +50,17 @@ val create : ?prog: string ->
     [strict_sequence] correspond activate toploop flags.  By default,
     they are not provided.
 
-    [msg_with_location] make error messages returned by {!eval}
+    @param msg_with_location make error messages returned by {!eval}
     contain the location of the error (default: [false]).  The
     location is always accessible using {!location_of_error} which can
     be used to highlight the problematic part of the phrase.
 
-    [prog] is the specially customized toploop that you want to run
-    (if for example it is at an unusual location). *)
+    @param silent_directives if set, the toplevel directives (existing
+    ones or new ones) will return an empty structure — thus
+    [Oprint.out_phrase] will print nothing.
+
+    @param prog is full path to the specially customized toploop that
+    you want to run (if for example it is at an unusual location). *)
 
 val close : _ t -> unit Deferred.t
 (** Terminates the toplevel. *)
@@ -70,6 +75,7 @@ val with_toploop :
   ?short_paths: bool ->
   ?strict_sequence: bool ->
   ?msg_with_location: bool ->
+  ?silent_directives: bool ->
   'a Output.kind -> f:('a t -> 'b Deferred.Or_error.t) -> 'b Deferred.Or_error.t
 (** [with_toploop kind f] will run [f], closing the toploop and
     freeing its resources whether [f] returns a result or an error.

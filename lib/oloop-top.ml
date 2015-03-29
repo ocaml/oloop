@@ -37,7 +37,7 @@ let () =
   := fun _fmt phrase ->
      out_phrase := Oloop_types.of_outcometree_phrase phrase
 
-let eval ~msg_with_location lexbuf =
+let eval ~msg_with_location ~silent_directives lexbuf =
   try
     Location.init lexbuf "//toplevel//";
     if not msg_with_location then
@@ -45,7 +45,11 @@ let eval ~msg_with_location lexbuf =
     let phrase = !Toploop.parse_toplevel_phrase lexbuf in
     ignore(Toploop.execute_phrase true Format.err_formatter phrase);
     ignore(Format.flush_str_formatter ()); (* fill [out_phrase] *)
-    Ok !out_phrase
+    match phrase with
+    | Parsetree.Ptop_def _ -> Ok !out_phrase
+    | Parsetree.Ptop_dir(s, _) ->
+       if silent_directives then Ok(Oloop_types.Signature [])
+       else Ok !out_phrase
   with
   | End_of_file -> exit 0
   | e ->
@@ -73,7 +77,7 @@ let read_phrase_exn ch =
   really_input ch phrase 0 len;
   phrase
 
-let main ~msg_with_location ~redirect_stderr ~sock_name =
+let main ~msg_with_location ~silent_directives ~redirect_stderr ~sock_name =
   initialize_toplevel ~redirect_stderr;
   let ch = (* or exn *)
     let fd = Unix.socket Unix.PF_UNIX Unix.SOCK_STREAM 0 in
@@ -83,7 +87,8 @@ let main ~msg_with_location ~redirect_stderr ~sock_name =
     Location.reset();
     let outcome =
       try let phrase = read_phrase_exn stdin in
-          eval ~msg_with_location (Lexing.from_string(phrase ^ ";;"))
+          eval ~msg_with_location ~silent_directives
+               (Lexing.from_string(phrase ^ ";;"))
       with e -> Error(`Internal_error e, "Exception raised during the \
                                          phrase evaluation") in
     Format.pp_print_flush Format.std_formatter ();
@@ -96,6 +101,7 @@ let main ~msg_with_location ~redirect_stderr ~sock_name =
 let () =
   let sock_name = ref "" in
   let msg_with_location = ref false in
+  let silent_directives = ref false in
   let redirect_stderr = ref false in
   (* These options must correspond to optional arguments in [Oloop.create]. *)
   let specs = [
@@ -118,6 +124,8 @@ let () =
        " Left-hand part of a sequence must have type unit");
       ("--msg-with-location", Arg.Set msg_with_location,
        " Add the source location to error messages");
+      ("--silent-directives", Arg.Set silent_directives,
+       " Make all toploop directives return an empty structure");
       ("--redirect-stderr", Arg.Set redirect_stderr,
        " Redirect stderr to stdout");
     ] in
@@ -125,5 +133,6 @@ let () =
   let anon_fun _ = raise(Arg.Bad "No anomymous argument") in
   Arg.parse specs anon_fun "oloop-top [options]";
   main ~msg_with_location:!msg_with_location
+       ~silent_directives:!silent_directives
        ~redirect_stderr:!redirect_stderr
        ~sock_name:!sock_name
