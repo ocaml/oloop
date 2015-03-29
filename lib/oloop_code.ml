@@ -47,7 +47,7 @@ let split_parts_of_file_exn filename =
 
 let split_toplevel_phrases_eol s =
   let rec loop (phrase,phrases) = function
-    | [] -> (phrase,phrases)
+    | [] -> phrase :: phrases
     | line::lines ->
       let accum =
         if String.rstrip line |> String.is_suffix ~suffix:";;" then
@@ -58,15 +58,8 @@ let split_toplevel_phrases_eol s =
       loop accum lines
   in
   let make_phrase l = String.concat ~sep:"\n" (List.rev l) in
-  let phrase,phrases = loop ([],[]) (String.split_lines s) in
-  match phrase with
-  | _::_ ->
-    error "OCaml toplevel phrase did not end with double semicolon"
-      (make_phrase phrase) sexp_of_string
-  | [] ->
-    match phrases with
-    | [] -> Or_error.error_string "empty OCaml toplevel phrase"
-    | _ -> Ok (List.map (List.rev phrases) ~f:make_phrase)
+  let phrases = loop ([],[]) (String.split_lines s) in
+  List.map (List.rev phrases) ~f:make_phrase
 
 
 let split_toplevel_phrases_anywhere s =
@@ -76,32 +69,24 @@ let split_toplevel_phrases_anywhere s =
     String.substr_index_all s ~may_overlap:false ~pattern:";;"
     |> fun l -> -2::l
   in
-  (
+  let ranges =
     match indexes with
     | [] -> assert false
     | _::[] ->
-      error "double semicolon not found in OCaml toplevel phrase"
-        s sexp_of_string
+       (* No semicolon in [s], treat it as a single phrase *)
+       if s = "" then []
+       else [(0, String.length s)]
     | _ ->
       let rec loop accum = function
-        | [] -> accum
-        | _::[] -> accum
+        | [] | [_] -> accum
         | i::(j::_ as indexes) ->
-          loop ((i+2,j+2)::accum) indexes
-      in
-      Ok (loop [] indexes)
-  )
-  >>= fun ranges ->
-  match ranges with
-  | [] -> assert false
-  | (_,last)::_ ->
-    if last < String.length s then
-      error "OCaml toplevel phrase doesn't end with ;;"
-        s sexp_of_string
-    else
-      List.rev ranges
-      |> List.map ~f:(fun (i,j) -> String.slice s i j)
-      |> fun x -> Ok x
+           let i = i + 2 in
+           (* Remove empty ranges *)
+           let accum = if i = j then accum else (i, j) :: accum in
+           loop accum indexes in
+      loop [] indexes in
+  List.rev ranges
+  |> List.map ~f:(fun (i,j) -> String.slice s i j)
 
 
 let split_toplevel_phrases where s = match where with

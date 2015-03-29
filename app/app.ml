@@ -73,7 +73,7 @@ let run ?out_dir ?open_core ?open_async filename =
     Code.split_parts_exn ~filename (In_channel.read_all filename) in
   let eval_part (part, content) =
     eprintf "X: %s, part %f\n%S\n\n%!" filename part content;
-    let data = ok_exn (Code.split_toplevel_phrases `Anywhere content) in
+    let data = Code.split_toplevel_phrases `Anywhere content in
     Deferred.List.map data ~f:(toploop_eval t) >>| fun data ->
     let data = <:sexp_of< phrase list >> data
                |> Sexp.to_string in

@@ -18,4 +18,4 @@ val split_parts_of_file_exn : string -> (float * string) list Deferred.t
 val split_toplevel_phrases
   :  [`Eol | `Anywhere]
   -> string
-  -> string list Or_error.t
+  -> string list
