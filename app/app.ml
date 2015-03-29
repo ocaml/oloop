@@ -22,6 +22,12 @@ type phrase = {
   stderr : string;
 } with sexp
 
+type error =
+  { input: string;
+    loc: Oloop.Location.t option;
+    msg: string;
+  } with sexp
+
 let string_of_queue q =
   String.concat ~sep:"" (Queue.to_list q)
 
@@ -31,14 +37,12 @@ let toploop_eval t (phrase: string) =
      let out_phrase = Oloop.phrase_remove_underscore_names out_phrase in
      let b = Buffer.create 1024 in
      !Oprint.out_phrase (Format.formatter_of_buffer b) out_phrase;
-     { input = phrase;
-       output = Buffer.contents b;
-       stdout = Oloop.Output.stdout o;
-       stderr = Oloop.Output.stderr o }
-  | Result.Error(_, msg) ->
-     { input = phrase;
-       output = msg;
-       stdout = "";  stderr = "" }
+     Result.Ok { input = phrase;
+                 output = Buffer.contents b;
+                 stdout = Oloop.Output.stdout o;
+                 stderr = Oloop.Output.stderr o }
+  | Result.Error(e, msg) ->
+     Result.Error {input = phrase; loc = Oloop.location_of_error e; msg}
 
 let run ?out_dir ?open_core ?open_async filename =
   eprintf "C: %s\n%!" filename;
@@ -72,10 +76,10 @@ let run ?out_dir ?open_core ?open_async filename =
   let parts =
     Code.split_parts_exn ~filename (In_channel.read_all filename) in
   let eval_part (part, content) =
-    eprintf "X: %s, part %f\n%S\n\n%!" filename part content;
+    eprintf "X: %s, Part %g\n%S\n\n%!" filename part content;
     let data = Code.split_toplevel_phrases `Anywhere content in
     Deferred.List.map data ~f:(toploop_eval t) >>| fun data ->
-    let data = <:sexp_of< phrase list >> data
+    let data = <:sexp_of< (phrase, error) Result.t list >> data
                |> Sexp.to_string in
     let base = Filename.(basename filename |> chop_extension) in
     let out_file = sprintf "%s/%s.%f.txt" out_dir base part in
