@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/agarwal/oloop.svg?branch=master)](https://travis-ci.org/agarwal/oloop)
+
 Oloop
 =====
 
