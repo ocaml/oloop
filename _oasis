@@ -26,7 +26,7 @@ Library "oloop"
 Executable "oloop-top"
   Path:           lib
   MainIs:         oloop-top.ml
-  BuildDepends:   compiler-libs.toplevel, bytes, dynlink
+  BuildDepends:   compiler-libs.toplevel, bytes, dynlink, unix
   CompiledObject: byte
   BuildTools:     ocamlbuild
   Install:        true

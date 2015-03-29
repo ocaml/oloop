@@ -11,6 +11,12 @@ module C___ = CamlinternalOO
 module D___ = Dynlink
 module St__ = StdLabels
 module Cp__ = Complex
+module Sc__ = Scanf
+module Gc__ = Gc
+module ML__ = MoreLabels
+module CiM_ = CamlinternalMod
+module Gl__ = Genlex
+module Oo__ = Oo
 
 let initialize_toplevel ~redirect_stderr =
   Sys.interactive := true;
@@ -47,7 +53,7 @@ let eval ~msg_with_location ~silent_directives lexbuf =
     ignore(Format.flush_str_formatter ()); (* fill [out_phrase] *)
     match phrase with
     | Parsetree.Ptop_def _ -> Ok !out_phrase
-    | Parsetree.Ptop_dir(s, _) ->
+    | Parsetree.Ptop_dir _ ->
        if silent_directives then Ok(Oloop_types.Signature [])
        else Ok !out_phrase
   with

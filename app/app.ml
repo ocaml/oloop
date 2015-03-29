@@ -9,6 +9,7 @@ module Code = Oloop_code
 let initial_phrases = [
   "#use \"topfind\"";
   "#camlp4o";
+  "#thread";
   "#require \"core\"";
   "#require \"core.syntax\"";
   "#require \"core.top\""
