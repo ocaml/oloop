@@ -44,7 +44,7 @@ let toploop_eval t (phrase: string) =
   | Result.Error(e, msg) ->
      Result.Error {input = phrase; loc = Oloop.location_of_error e; msg}
 
-let run ?out_dir ?open_core ?open_async filename =
+let run ?out_dir ?open_core ?open_async ~msg_with_location filename =
   eprintf "C: %s\n%!" filename;
   let out_dir = match out_dir with
     | Some x -> x
@@ -62,7 +62,8 @@ let run ?out_dir ?open_core ?open_async filename =
        else initial_phrases
     | None -> initial_phrases
   in
-  Oloop.create Oloop.Output.separate >>= function
+  let msg_with_location = if msg_with_location then Some() else None in
+  Oloop.create Oloop.Output.separate ?msg_with_location >>= function
   | Result.Error e ->
      return(eprintf "Could not create a toploop for %S\nReason: %s\n"
                     filename (Error.to_string_hum e))
@@ -98,11 +99,14 @@ let main = Command.basic
     +> flag "-c" (optional bool) ~doc:"CORE Do open Core.Std before \
                                       evaluating any code"
     +> flag "-a" (optional bool) ~doc:"ASYNC Do open Async.Std before \
-                                      evaluating any code"
+                                       evaluating any code"
+    +> flag "--msg-with-location" no_arg
+            ~doc:" Print the location in the phrase of errors"
     +> anon (sequence ("file" %: file))
   )
-  (fun out_dir open_core open_async files () ->
-   ignore(Deferred.List.iter files ~f:(run ?out_dir ?open_core ?open_async)
+  (fun out_dir open_core open_async msg_with_location files () ->
+   ignore(Deferred.List.iter
+            files ~f:(run ?out_dir ?open_core ?open_async ~msg_with_location)
           >>| fun () -> shutdown 0);
    never_returns(Scheduler.go()))
 
