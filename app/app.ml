@@ -66,34 +66,35 @@ let run ?out_dir ~open_core ~open_async ~inits ~msg_with_location ~pkgs
      return(eprintf "Could not create a toploop for %S\nReason: %s\n"
                     filename (Error.to_string_hum e))
   | Result.Ok t ->
-  Deferred.List.iter initial_phrases
-                     ~f:(fun phrase ->
-                         Oloop.eval t phrase >>| function
-                         | Result.Ok _ -> ()
-                         | Error(_, msg) -> eprintf "ERROR: %s\n%!" msg
-                        ) >>= fun () ->
-  let parts =
-    Code.split_parts_exn ~filename (In_channel.read_all filename) in
-  let eval_part (part, content) =
-    eprintf "X: %s, Part %g\n%S\n\n%!" filename part content;
-    let data = Code.split_toplevel_phrases `Anywhere content in
-    Deferred.List.map data ~f:(toploop_eval t) >>| fun data ->
-    let data = <:sexp_of< (phrase, error) Result.t list >> data
-               |> Sexp.to_string in
-    let base = Filename.(basename filename |> chop_extension) in
-    let out_file = sprintf "%s/%s.%f.txt" out_dir base part in
-    Out_channel.write_all out_file ~data
-  in
-  Deferred.List.iter parts ~f:eval_part
+     Deferred.List.iter initial_phrases
+                        ~f:(fun phrase ->
+                            Oloop.eval t phrase >>| function
+                            | Result.Ok _ -> ()
+                            | Error(_, msg) -> eprintf "ERROR: %s\n%!" msg
+                           ) >>= fun () ->
+     let parts =
+       Code.split_parts_exn ~filename (In_channel.read_all filename) in
+     let eval_part (part, content) =
+       eprintf "X: %s, Part %g\n%S\n\n%!" filename part content;
+       let data = Code.split_toplevel_phrases `Anywhere content in
+       Deferred.List.map data ~f:(toploop_eval t) >>| fun data ->
+       let data = <:sexp_of< (phrase, error) Result.t list >> data
+                  |> Sexp.to_string in
+       let base = Filename.(basename filename |> chop_extension) in
+       let out_file = sprintf "%s/%s.%f.txt" out_dir base part in
+       Out_channel.write_all out_file ~data
+     in
+     Deferred.List.iter parts ~f:eval_part
 
 
-let main = Command.basic
-  ~summary:"Run files through the OCaml toplevel"
-  Command.Spec.(
+let main =
+  Command.basic
+    ~summary:"Run files through the OCaml toplevel"
+    Command.Spec.(
     empty
     +> flag "-o" (optional string)
-      ~doc:"DIR Write files to directory DIR. Default is write to the \
-            same directory that FILE is in."
+            ~doc:"DIR Write files to directory DIR. Default is write to the \
+                  same directory that FILE is in."
     +> flag "--pkg" (listed string)
             ~doc:"PKG Load the package PKG before evaluating any code"
     +> flag "--core" no_arg
@@ -105,12 +106,12 @@ let main = Command.basic
     +> flag "--msg-with-location" no_arg
             ~doc:" Print the location in the phrase of errors"
     +> anon (sequence ("file" %: file))
-  )
-  (fun out_dir pkgs open_core open_async inits msg_with_location files () ->
-   ignore(Deferred.List.iter
-            files ~f:(run ?out_dir ~open_core ~open_async ~inits
-                          ~msg_with_location ~pkgs)
-          >>| fun () -> shutdown 0);
-   never_returns(Scheduler.go()))
+    )
+    (fun out_dir pkgs open_core open_async inits msg_with_location files () ->
+     ignore(Deferred.List.iter
+              files ~f:(run ?out_dir ~open_core ~open_async ~inits
+                            ~msg_with_location ~pkgs)
+            >>| fun () -> shutdown 0);
+     never_returns(Scheduler.go()))
 
 let () = Command.run main ~version:App_conf.version
