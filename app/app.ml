@@ -106,4 +106,4 @@ let main = Command.basic
           >>| fun () -> shutdown 0);
    never_returns(Scheduler.go()))
 
-let () = Command.run main
+let () = Command.run main ~version:App_conf.version

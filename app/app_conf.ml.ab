@@ -1,0 +1,3 @@
+(* Configuration of the app from be build system.       -*-tuareg-*- *)
+
+let version = "$(pkg_version)"

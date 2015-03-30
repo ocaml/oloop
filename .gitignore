@@ -10,6 +10,7 @@
 META
 *.mldylib
 *.mllib
+/app/app_conf.ml
 /lib/oloop_conf.ml
 /lib/oloop_ocaml.ml
 /lib/oloop_top.ml

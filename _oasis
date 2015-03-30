@@ -11,7 +11,7 @@ License:     ISC
 Homepage:    https://github.com/agarwal/oloop
 Plugins:     META (0.4), StdFiles (0.4)
 OCamlVersion: >= 4.01.0
-FilesAB:     lib/oloop_conf.ml.ab
+FilesAB:     lib/oloop_conf.ml.ab, app/app_conf.ml.ab
 PreBuildCommand: optcomp-o lib/oloop_ocaml.mlp > lib/oloop_ocaml.ml &&
   optcomp-o lib/oloop_top.mlp > lib/oloop_top.ml
 
