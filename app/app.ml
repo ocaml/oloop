@@ -44,24 +44,20 @@ let toploop_eval t (phrase: string) =
   | Result.Error(e, msg) ->
      Result.Error {input = phrase; loc = Oloop.location_of_error e; msg}
 
-let run ?out_dir ?open_core ?open_async ~msg_with_location filename =
+let run ?out_dir ?(open_core=false) ?(open_async=false)
+        ~msg_with_location filename =
   eprintf "C: %s\n%!" filename;
   let out_dir = match out_dir with
     | Some x -> x
     | None -> Filename.dirname filename
   in
-  let initial_phrases = match open_core with
-    | Some x ->
-       if x then initial_phrases @ ["open Core.Std"]
-       else initial_phrases
-    | None -> initial_phrases
-  in
-  let initial_phrases = match open_async with
-    | Some x ->
-       if x then initial_phrases @ ["#require \"async\"";"open Async.Std"]
-       else initial_phrases
-    | None -> initial_phrases
-  in
+  let initial_phrases =
+    if open_core then initial_phrases @ ["open Core.Std"]
+    else initial_phrases in
+  let initial_phrases =
+    if open_async then
+      initial_phrases @ ["#require \"async\"";"open Async.Std"]
+    else initial_phrases in
   let msg_with_location = if msg_with_location then Some() else None in
   Oloop.create Oloop.Output.separate ?msg_with_location >>= function
   | Result.Error e ->
