@@ -134,7 +134,8 @@ val phrase_remove_underscore_names :
 val signatures_remove_underscore_names :
   Outcometree.out_sig_item list -> Outcometree.out_sig_item list
 
-
+(** Copy of the compiler [Location] module, enriched with convetions
+    from and to sexp. *)
 module Location : sig
     include module type of Location with type t = Location.t
 
