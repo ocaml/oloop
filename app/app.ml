@@ -5,16 +5,6 @@ open Core.Std
 open Async.Std
 module Code = Oloop_code
 
-(** Run these phrases silently before any code *)
-let initial_phrases = [
-  "#use \"topfind\"";
-  "#camlp4o";
-  "#thread";
-  "#require \"core\"";
-  "#require \"core.syntax\"";
-  "#require \"core.top\""
-]
-
 type phrase = {
   input : string;
   output : string;
@@ -44,20 +34,28 @@ let toploop_eval t (phrase: string) =
   | Result.Error(e, msg) ->
      Result.Error {input = phrase; loc = Oloop.location_of_error e; msg}
 
-let run ?out_dir ?(open_core=false) ?(open_async=false)
-        ~msg_with_location filename =
+let run ?out_dir ~open_core ~open_async ~msg_with_location pkgs filename =
   eprintf "C: %s\n%!" filename;
   let out_dir = match out_dir with
     | Some x -> x
     | None -> Filename.dirname filename
   in
+  (* Phrases to eval before any code, in REVERSE order. *)
+  let initial_phrases = [ "#use \"topfind\"" ] in
   let initial_phrases =
-    if open_core then initial_phrases @ ["open Core.Std"]
+    if open_core || open_async then
+      "open Core.Std" :: "#require \"core.top\""
+      :: "#require \"core.syntax\"" :: "#require \"core\""
+      :: "#thread" :: "#camlp4o" :: initial_phrases
     else initial_phrases in
   let initial_phrases =
     if open_async then
-      initial_phrases @ ["#require \"async\"";"open Async.Std"]
+      "open Async.Std" :: "#require \"async\"" :: initial_phrases
     else initial_phrases in
+  let require_pkgs =
+    List.map pkgs ~f:(fun p -> sprintf "#require %S" p) in
+  let initial_phrases = List.rev_append require_pkgs initial_phrases in
+  let initial_phrases = List.rev initial_phrases in
   let msg_with_location = if msg_with_location then Some() else None in
   Oloop.create Oloop.Output.separate ?msg_with_location >>= function
   | Result.Error e ->
@@ -86,23 +84,26 @@ let run ?out_dir ?(open_core=false) ?(open_async=false)
 
 
 let main = Command.basic
-  ~summary:"Run files through the Core toplevel"
+  ~summary:"Run files through the OCaml toplevel"
   Command.Spec.(
     empty
     +> flag "-o" (optional string)
       ~doc:"DIR Write files to directory DIR. Default is write to the \
             same directory that FILE is in."
-    +> flag "-c" (optional bool) ~doc:"CORE Do open Core.Std before \
-                                      evaluating any code"
-    +> flag "-a" (optional bool) ~doc:"ASYNC Do open Async.Std before \
-                                       evaluating any code"
+    +> flag "--pkg" (listed string)
+            ~doc:"PKG Load the package PKG before evaluating any code"
+    +> flag "--core" no_arg
+            ~doc:" Open Core.Std before evaluating any code"
+    +> flag "--async" no_arg
+            ~doc:" Open Async.Std before evaluating any code"
     +> flag "--msg-with-location" no_arg
             ~doc:" Print the location in the phrase of errors"
     +> anon (sequence ("file" %: file))
   )
-  (fun out_dir open_core open_async msg_with_location files () ->
+  (fun out_dir pkgs open_core open_async msg_with_location files () ->
    ignore(Deferred.List.iter
-            files ~f:(run ?out_dir ?open_core ?open_async ~msg_with_location)
+            files ~f:(run ?out_dir ~open_core ~open_async
+                          ~msg_with_location pkgs)
           >>| fun () -> shutdown 0);
    never_returns(Scheduler.go()))
 
