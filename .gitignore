@@ -11,5 +11,6 @@ META
 *.mldylib
 *.mllib
 /lib/oloop_conf.ml
-/tests/*.txt
 /lib/oloop_ocaml.ml
+/lib/oloop_top.ml
+/tests/example*.txt

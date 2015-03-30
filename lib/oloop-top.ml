@@ -3,6 +3,7 @@
    minimize conflicts when #load'ing modules. *)
 
 open Oloop_types
+open Oloop_top
 
 (* Force the linking of some modules for, say, #load "camlp4o.cma" *)
 module S___ = Stream
@@ -49,6 +50,7 @@ let eval ~msg_with_location ~silent_directives lexbuf =
     if not msg_with_location then
       Location.input_lexbuf := Some lexbuf;
     let phrase = !Toploop.parse_toplevel_phrase lexbuf in
+    let phrase = Rule.rewrite phrase in
     ignore(Toploop.execute_phrase true Format.err_formatter phrase);
     ignore(Format.flush_str_formatter ()); (* fill [out_phrase] *)
     match phrase with
@@ -134,6 +136,10 @@ let () =
        " Make all toploop directives return an empty structure");
       ("--redirect-stderr", Arg.Set redirect_stderr,
        " Redirect stderr to stdout");
+      ("--determine-deferred", Arg.Unit(fun () -> Rule.(enable async)),
+       " Determine anonymous Deferred.t values (as Utop does)");
+      ("--determine-lwt", Arg.Unit(fun () -> Rule.(enable lwt)),
+       " Determine anonymous Lwt.t values (as Utop does)");
     ] in
   let specs = Arg.align specs in
   let anon_fun _ = raise(Arg.Bad "No anomymous argument") in

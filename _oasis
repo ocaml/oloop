@@ -12,7 +12,8 @@ Homepage:    https://github.com/agarwal/oloop
 Plugins:     META (0.4), StdFiles (0.4)
 OCamlVersion: >= 4.01.0
 FilesAB:     lib/oloop_conf.ml.ab
-PreBuildCommand: optcomp-o lib/oloop_ocaml.mlp > lib/oloop_ocaml.ml
+PreBuildCommand: optcomp-o lib/oloop_ocaml.mlp > lib/oloop_ocaml.ml &&
+  optcomp-o lib/oloop_top.mlp > lib/oloop_top.ml
 
 Library "oloop"
   Path:        lib
@@ -54,6 +55,15 @@ Executable "require"
   Build$:         flag(tests)
   MainIs:         test_require.ml
   BuildDepends:   oloop
+  CompiledObject: best
+  BuildTools:     ocamlbuild
+  Install:        false
+
+Executable "deferred"
+  Path:           tests
+  Build$:         flag(tests)
+  MainIs:         test_deferred.ml
+  BuildDepends:   oloop, async_kernel
   CompiledObject: best
   BuildTools:     ocamlbuild
   Install:        false

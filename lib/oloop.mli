@@ -42,6 +42,8 @@ val create : ?prog: string ->
              ?strict_sequence: unit ->
              ?msg_with_location: unit ->
              ?silent_directives: unit ->
+             ?determine_deferred: unit ->
+             ?determine_lwt: unit ->
              'a Output.kind -> 'a t Or_error.t Deferred.t
 (** Create a new toploop.
 
@@ -58,6 +60,12 @@ val create : ?prog: string ->
     @param silent_directives if set, the toplevel directives (existing
     ones or new ones) will return an empty structure — thus
     [Oprint.out_phrase] will print nothing.
+
+    @param determine_deferred Automatically determine anonymous
+    [Deferred.t] values as Utop does.
+
+    @param determine_lwt Automatically determine anonymous [Lwt.t]
+    values as Utop does.
 
     @param prog is full path to the specially customized toploop that
     you want to run (if for example it is at an unusual location). *)
@@ -76,6 +84,8 @@ val with_toploop :
   ?strict_sequence: unit ->
   ?msg_with_location: unit ->
   ?silent_directives: unit ->
+  ?determine_deferred: unit ->
+  ?determine_lwt: unit ->
   'a Output.kind -> f:('a t -> 'b Deferred.Or_error.t) -> 'b Deferred.Or_error.t
 (** [with_toploop kind f] will run [f], closing the toploop and
     freeing its resources whether [f] returns a result or an error.

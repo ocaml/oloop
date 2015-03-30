@@ -46,6 +46,7 @@ let present = function
 let create ?(prog = !default_toplevel) ?(include_dirs=[]) ?init
            ?no_app_functors ?principal ?rectypes ?short_paths
            ?strict_sequence ?msg_with_location ?silent_directives
+           ?determine_deferred ?determine_lwt
            output_merged =
   let sock_path = Filename.temp_file "oloop" ".fifo" in
   Unix.unlink sock_path >>= fun () ->
@@ -68,6 +69,10 @@ let create ?(prog = !default_toplevel) ?(include_dirs=[]) ?init
   let args = if present msg_with_location then "--msg-with-location" :: args
              else args in
   let args = if present silent_directives then "--silent-directives" :: args
+             else args in
+  let args = if present determine_deferred then "--determine-deferred" :: args
+             else args in
+  let args = if present determine_lwt then "--determine-lwt" :: args
              else args in
   let args = if output_merged then "--redirect-stderr" :: args else args in
   Process.create ~prog ~args () >>=? fun proc ->
@@ -94,10 +99,12 @@ let close t =
 
 let with_toploop ?prog ?include_dirs ?init ?no_app_functors ?principal
                  ?rectypes ?short_paths ?strict_sequence ?msg_with_location
-                 ?silent_directives output_merged ~f =
+                 ?silent_directives ?determine_deferred ?determine_lwt
+                 output_merged ~f =
   create ?prog ?include_dirs ?init ?no_app_functors ?principal
          ?rectypes ?short_paths ?strict_sequence ?msg_with_location
-         ?silent_directives output_merged
+         ?silent_directives ?determine_deferred ?determine_lwt
+         output_merged
   >>= function
   | Result.Ok t -> f t
                   >>= fun r -> close t
