@@ -1,4 +1,4 @@
-(* Types share between the Oloop module and the oloop-top executable
+(* Types shared between the Oloop module and the oloop-top executable
    to ensure typed communication. *)
 
 type pp_directive =
@@ -37,28 +37,30 @@ let replay l fmt =
    marshalled) to handle arbitrary pretty printers.  Play it on a
    recording formatter to keep most of it. *)
 
-type out_value =
-  | Array of out_value list
+type serializable_out_value =
+  | Array of serializable_out_value list
   | Char of char
-  | Constr of Outcometree.out_ident * out_value list
+  | Constr of Outcometree.out_ident * serializable_out_value list
   | Ellipsis
   | Float of float
   | Int of int
   | Int32 of int32
   | Int64 of int64
   | Nativeint of nativeint
-  | List of out_value list
+  | List of serializable_out_value list
   | Printer of pp_directive list
-  | Record of (Outcometree.out_ident * out_value) list
+  | Record of (Outcometree.out_ident * serializable_out_value) list
   | String of string
   | Stuff of string
-  | Tuple of out_value list
-  | Variant of string * out_value option
+  | Tuple of serializable_out_value list
+  | Variant of string * serializable_out_value option
 
-type out_phrase =
-  | Eval of out_value * Outcometree.out_type
-  | Signature of (Outcometree.out_sig_item * out_value option) list
-  | Exception of (exn * out_value)
+type serializable_out_phrase =
+  | Eval of serializable_out_value * Outcometree.out_type
+  | Signature of (Outcometree.out_sig_item * serializable_out_value option) list
+  | Exception of (exn * serializable_out_value)
+
+let empty = Signature []
 
 let rec of_outcometree_value =
   let open Outcometree in
@@ -151,7 +153,7 @@ type error =
       The string is the explanation the toplevel would display
       (or an explanation of the error in case of [`Internal_error]). *)
 type out_phrase_or_error =
-  | Ok of out_phrase
+  | Ok of serializable_out_phrase
   | Error of (error * string)
 
 let send_out_phrase_or_error ch (o: out_phrase_or_error) =

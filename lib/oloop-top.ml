@@ -38,7 +38,7 @@ let initialize_toplevel ~redirect_stderr =
 (* This special toplevel will not print the result of the evaluation
    of phrases but store it to transmit it in its original form in a
    special channel. *)
-let out_phrase = ref(Oloop_types.Signature []) (* dummy *)
+let out_phrase = ref Oloop_types.empty (* dummy *)
 let () =
   Toploop.print_out_phrase
   := fun _fmt phrase ->
@@ -56,7 +56,7 @@ let eval ~msg_with_location ~silent_directives lexbuf =
     match phrase with
     | Parsetree.Ptop_def _ -> Ok !out_phrase
     | Parsetree.Ptop_dir _ ->
-       if silent_directives then Ok(Oloop_types.Signature [])
+       if silent_directives then Ok(Oloop_types.empty)
        else Ok !out_phrase
   with
   | End_of_file -> exit 0
