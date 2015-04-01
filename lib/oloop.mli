@@ -4,6 +4,7 @@ open Async_kernel.Std
 type 'a t
 (** A handle to a toploop. *)
 
+(** Specifying how output should be handled. *)
 module Output : sig
     type 'a t
     (** Stdout and stderr output of the toploop. *)

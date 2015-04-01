@@ -111,7 +111,7 @@ let with_toploop ?prog ?include_dirs ?init ?no_app_functors ?principal
                   >>= fun () -> return r
   | Result.Error _ as e -> return e
 
-
+(* Same as Oloop_types.error but with SEXP convertion. *)
 type eval_error =
   [ `Lexer of Oloop_ocaml.lexer_error * Oloop_ocaml.Location.t
   | `Syntaxerr of Oloop_ocaml.syntaxerr_error
