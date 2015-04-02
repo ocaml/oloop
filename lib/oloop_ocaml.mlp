@@ -1150,8 +1150,24 @@ module Env = struct
 #endif
       with sexp
 
+    let initial_environment =
+      Compmisc.init_path false; (* false because the toploop is not native *)
+      Compmisc.initial_env()
+
+    let of_summary sum =
+      try
+        (* Do the same as Envaux.env_of_only_summary except that it
+           uses [sum] as the summary (one cannot set directly the
+           summary of a given environment). *)
+        let env_from_summary _sum subst =
+          Envaux.env_from_summary sum subst in
+        Env.env_of_only_summary env_from_summary initial_environment
+      with _ ->
+        (* FIXME: do we want to report the error? *)
+        Env.empty
+
     let t_of_sexp sexp =
-      Oloop_types.env_of_summary(summary_of_sexp sexp)
+      of_summary(summary_of_sexp sexp)
 
     let sexp_of_t t =
       sexp_of_summary(Env.summary t)

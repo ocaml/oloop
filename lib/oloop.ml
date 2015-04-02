@@ -127,15 +127,17 @@ type error =
   [ eval_error
   | `Internal_error of Exn.t ]
 
+
+let env_of_summary = Oloop_ocaml.Env.of_summary
+
 let deserialize_to_error : Oloop_types.serializable_error -> error =
   function
   | (`Lexer _ | `Syntaxerr _ | `Symtable _ | `Internal_error _) as e -> e
   | `Typedecl(loc, e) ->
-     `Typedecl(loc, Oloop_types.deserialize_typedecl_error e)
-  | `Typetexp(loc, env, e) ->
-     `Typetexp(loc, Oloop_types.env_of_summary env, e)
-  | `Typecore(loc, env, e) ->
-     `Typecore(loc, Oloop_types.env_of_summary env, e)
+     `Typedecl(loc, Oloop_types.deserialize_typedecl_error
+                      ~env_of_summary e)
+  | `Typetexp(loc, env, e) -> `Typetexp(loc, env_of_summary env, e)
+  | `Typecore(loc, env, e) -> `Typecore(loc, env_of_summary env, e)
 
 
 let location_of_error : error -> Location.t option = function

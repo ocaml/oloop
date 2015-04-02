@@ -146,9 +146,6 @@ let to_outcometree_phrase =
 (* Several errors contain Env.t which is not serializable because it
    contains a closure.  Convert the Env.t to their summary. *)
 
-let env_of_summary s =
-  Envaux.env_from_summary s Subst.identity
-
 type serializable_typedecl_error =
   | S_Repeated_parameter
   | S_Duplicate_constructor of string
@@ -232,7 +229,10 @@ let serialize_typedecl_error =
   | Varying_anonymous -> S_Varying_anonymous
 
 
-let deserialize_typedecl_error =
+(* [env_of_summary] requires that the path and initial environment are
+   initialized.  This is not necessary for the toploop thus is done in
+   [Oloop_ocaml] for the main program only. *)
+let deserialize_typedecl_error ~env_of_summary =
   let open Typedecl in
   function
   | S_Repeated_parameter -> Repeated_parameter
