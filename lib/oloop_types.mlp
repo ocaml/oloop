@@ -133,7 +133,16 @@ let to_outcometree_phrase =
   | Signature l -> Ophr_signature(List.map to_outcometree_sig l)
   | Exception(e, ov) -> Ophr_exception(e, to_outcometree_value ov)
 
-(** Enumeration of errors. *)
+(*
+ * Errors
+ *)
+
+(* Several errors contain Env.t which is not serializable because it
+   contains a closure.  Convert the Env.t to their summary. *)
+
+let env_of_summary s =
+  Envaux.env_from_summary s Subst.identity
+
 type error =
   [ `Lexer of Lexer.error * Location.t
   | `Syntaxerr of Syntaxerr.error

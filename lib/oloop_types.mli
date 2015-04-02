@@ -27,6 +27,7 @@ type error =
   | `Symtable of Symtable.error
   | `Internal_error of exn ]
 
+val env_of_summary : Env.summary -> Env.t
 
 type out_phrase_or_error =
   | Ok of serializable_out_phrase
