@@ -122,6 +122,11 @@ val eval_or_error :
    [Error.t] using the function {!to_error}. *)
 
 
+val report_error : ?msg_with_location: bool ->
+                   Format.formatter -> error -> unit
+(** [report_error ppf e] write an error message corresponding to [e]
+    to the formatter [ppf] just as the toploop would do it. *)
+
 val location_of_error : error -> Location.t option
 (** [location_of_error e] returns the error location if any is present. *)
 

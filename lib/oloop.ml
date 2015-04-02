@@ -130,6 +130,42 @@ let location_of_error : error -> Location.t option = function
   | `Typecore(l, _) -> Some l
   | `Syntaxerr _ | `Symtable _ | `Internal_error _ -> None
 
+let report_error ?(msg_with_location=false) ppf e =
+  (* Do the reverse than the conversion in oloop-top in order to be able
+     to use the compiler reporting functions.  The difference is that
+     all environments are empty (they cannot be serialized). *)
+  let exn = match e with
+    | `Lexer(e, l) -> Lexer.Error(e, l)
+    | `Syntaxerr e -> Syntaxerr.Error e
+    | `Typedecl(l, e) -> Typedecl.Error(l, e)
+    | `Typetexp(l, e) -> Typetexp.Error(l, Env.empty, e)
+    | `Typecore(l, e) -> Typecore.Error(l, Env.empty, e)
+    | `Symtable e -> Symtable.Error e
+    | `Internal_error e -> e in
+  if msg_with_location then
+    Errors.report_error ppf exn
+  else (
+    (* The location of the error is reported because the terminal is
+       detected as dumb.  Remove it "manually". *)
+    let b = Buffer.create 64 in
+    Errors.report_error (Format.formatter_of_buffer b) exn;
+    let len = Buffer.length b in
+    let loc_present =
+      Buffer.(len > 3 && nth b 0 = 'C' && nth b 1 = 'h' && nth b 2 = 'a') in
+    let ofs =
+      if loc_present then (
+        (* Skip the first line. *)
+        let ofs = ref 0 in
+        while !ofs < len && Buffer.nth b !ofs <> '\n' do incr ofs done;
+        !ofs + 1
+      )
+      else 0 in
+    let err = try Buffer.sub b ofs (len - ofs)
+              with Invalid_argument _ -> "" in
+    Format.pp_print_string ppf err
+  )
+
+
 let queue_of_pipe p =
   match Pipe.read_now' p with
   | `Eof | `Nothing_available -> Queue.create()

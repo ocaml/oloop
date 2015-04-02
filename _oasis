@@ -22,7 +22,7 @@ Library "oloop"
   InternalModules: Oloop_types, Oloop_code, Oloop_conf, Oloop_ocaml,
                    Oloop_file
   BuildDepends: core_kernel, async, sexplib.syntax, compiler-libs.common,
-                bytes
+                compiler-libs.bytecomp, bytes
 
 Executable "oloop-top"
   Path:           lib
@@ -63,6 +63,15 @@ Executable "deferred"
   Path:           tests
   Build$:         flag(tests)
   MainIs:         test_deferred.ml
+  BuildDepends:   oloop, async_kernel
+  CompiledObject: best
+  BuildTools:     ocamlbuild
+  Install:        false
+
+Executable "error"
+  Path:           tests
+  Build$:         flag(tests)
+  MainIs:         test_error.ml
   BuildDepends:   oloop, async_kernel
   CompiledObject: best
   BuildTools:     ocamlbuild
