@@ -97,8 +97,8 @@ type eval_error =
   [ `Lexer of Lexer.error * Location.t
   | `Syntaxerr of Syntaxerr.error
   | `Typedecl of Location.t * Typedecl.error
-  | `Typetexp of Location.t * Typetexp.error
-  | `Typecore of Location.t * Typecore.error
+  | `Typetexp of Location.t * Env.t * Typetexp.error
+  | `Typecore of Location.t * Env.t * Typecore.error
   | `Symtable of Symtable.error
   ] with sexp
 

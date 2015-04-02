@@ -2,8 +2,8 @@
    code dependent on then compiler version. *)
 
 
-(* Code taken from UTop_main and adapted to the current project. *)
 module Rule = struct
+    (* Code taken from UTop_main and adapted to the current project. *)
 
   type t =
     { required_values : Longident.t list;

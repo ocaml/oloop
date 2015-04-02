@@ -2,7 +2,7 @@
 # OASIS_STOP
 
 true: annot, bin_annot, short_paths
-true: warn(A-4-33-40-41-42-44-45-48)
+true: warn(A-4@8-33-40-41-42-44-45-48)
 <lib/*>: thread
 true: thread
 # oloop_types is used by both the library (which uses Core) and the

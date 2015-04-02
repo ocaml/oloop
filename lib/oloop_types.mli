@@ -17,21 +17,26 @@ val to_outcometree_phrase : serializable_out_phrase -> Outcometree.out_phrase
 (** Recover the origina outcometree from the serialized version (with
     a slight approximation for custom printers).  *)
 
+type serializable_typedecl_error
+
 (** Enumeration of errors. *)
-type error =
+type serializable_error =
   [ `Lexer of Lexer.error * Location.t
   | `Syntaxerr of Syntaxerr.error
-  | `Typedecl of Location.t * Typedecl.error
-  | `Typetexp of Location.t * Typetexp.error
-  | `Typecore of Location.t * Typecore.error
+  | `Typedecl of Location.t * serializable_typedecl_error
+  | `Typetexp of Location.t * Env.summary * Typetexp.error
+  | `Typecore of Location.t * Env.summary * Typecore.error
   | `Symtable of Symtable.error
   | `Internal_error of exn ]
 
 val env_of_summary : Env.summary -> Env.t
 
+val serialize_typedecl_error : Typedecl.error -> serializable_typedecl_error
+val deserialize_typedecl_error : serializable_typedecl_error -> Typedecl.error
+
 type out_phrase_or_error =
   | Ok of serializable_out_phrase
-  | Error of (error * string)
+  | Error of (serializable_error * string)
 
 val send_out_phrase_or_error : out_channel -> out_phrase_or_error -> unit
 (** [send_out_phrase_or_error ch p] serialize and send the phrase or

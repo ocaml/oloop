@@ -70,9 +70,10 @@ let eval ~msg_with_location ~silent_directives lexbuf =
      let err = match e with
        | Lexer.Error(e, l) -> `Lexer(e, l)
        | Syntaxerr.Error e -> `Syntaxerr e
-       | Typedecl.Error(l, e) -> `Typedecl(l, e)
-       | Typetexp.Error(l, _env, e) -> `Typetexp(l, e)
-       | Typecore.Error(l, _env, e) -> `Typecore(l, e)
+       | Typedecl.Error(l, e) ->
+          `Typedecl(l, Oloop_types.serialize_typedecl_error e)
+       | Typetexp.Error(l, env, e) -> `Typetexp(l, Env.summary env, e)
+       | Typecore.Error(l, env, e) -> `Typecore(l, Env.summary env, e)
        | Symtable.Error e -> `Symtable e
        (* FIXME: add more *)
        | _ -> `Internal_error e in

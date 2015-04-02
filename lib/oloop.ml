@@ -116,8 +116,10 @@ type eval_error =
   [ `Lexer of Oloop_ocaml.lexer_error * Oloop_ocaml.Location.t
   | `Syntaxerr of Oloop_ocaml.syntaxerr_error
   | `Typedecl of Oloop_ocaml.Location.t * Oloop_ocaml.Typedecl.error
-  | `Typetexp of Oloop_ocaml.Location.t * Oloop_ocaml.Typetexp.error
-  | `Typecore of Oloop_ocaml.Location.t * Oloop_ocaml.Typecore.error
+  | `Typetexp of Oloop_ocaml.Location.t * Oloop_ocaml.Env.t
+                 * Oloop_ocaml.Typetexp.error
+  | `Typecore of Oloop_ocaml.Location.t * Oloop_ocaml.Env.t
+                 * Oloop_ocaml.Typecore.error
   | `Symtable of Oloop_ocaml.Symtable.error
   ] with sexp
 
@@ -125,9 +127,20 @@ type error =
   [ eval_error
   | `Internal_error of Exn.t ]
 
+let deserialize_to_error : Oloop_types.serializable_error -> error =
+  function
+  | (`Lexer _ | `Syntaxerr _ | `Symtable _ | `Internal_error _) as e -> e
+  | `Typedecl(loc, e) ->
+     `Typedecl(loc, Oloop_types.deserialize_typedecl_error e)
+  | `Typetexp(loc, env, e) ->
+     `Typetexp(loc, Oloop_types.env_of_summary env, e)
+  | `Typecore(loc, env, e) ->
+     `Typecore(loc, Oloop_types.env_of_summary env, e)
+
+
 let location_of_error : error -> Location.t option = function
-  | `Lexer(_, l) | `Typedecl(l, _) | `Typetexp(l, _)
-  | `Typecore(l, _) -> Some l
+  | `Lexer(_, l) | `Typedecl(l, _) | `Typetexp(l, _, _)
+  | `Typecore(l, _, _) -> Some l
   | `Syntaxerr _ | `Symtable _ | `Internal_error _ -> None
 
 let queue_of_pipe p =
@@ -150,11 +163,11 @@ let eval t phrase =
   match out_phrase with
   | `Ok(Oloop_types.Ok r) ->
      return(Result.Ok(Oloop_types.to_outcometree_phrase r, o))
-  | `Ok(Oloop_types.Error e) ->
+  | `Ok(Oloop_types.Error(e, msg)) ->
      (* When the code was not correclty evaluated, the [phrase] is
         outputted on stdout with terminal codes to underline the error
         location.  Since we have access to the location, this is useless. *)
-     return(Result.Error(e: error * string))
+     return(Result.Error(deserialize_to_error e, msg))
   | `Eof ->
      return(Result.Error(`Internal_error End_of_file,
                          "The toploop did not return a result"))
