@@ -1,0 +1,303 @@
+(* Types shared between the Oloop module and the oloop-top executable
+   to ensure typed communication. *)
+
+open Types (* compiler types *)
+
+(*
+ * out_phrase
+ *)
+
+type pp_directive =
+  | String of string
+  | Newline
+  | Spaces of int
+
+let recorder l =
+  let out_string s ofs len = l := String(String.sub s ofs len) :: !l in
+  let out_flush () = () in
+  let out_newline () = l := Newline :: !l in
+  let out_spaces n = l := Spaces n :: !l in
+  let fmt = Format.make_formatter out_string out_flush in
+  Format.pp_set_formatter_out_functions
+    fmt { Format.out_string;  out_flush;  out_newline;  out_spaces };
+  fmt
+
+let record (pp: Format.formatter -> unit) =
+  let l = ref [] in
+  let fmt = recorder l in
+  pp fmt;
+  Format.pp_print_flush fmt ();
+  List.rev !l
+
+let play_directive fmt = function
+  | String s -> Format.pp_print_string fmt s
+  | Newline -> Format.pp_force_newline fmt ()
+  | Spaces n -> for _i = 1 to n do Format.pp_print_space fmt () done
+
+let replay l fmt =
+  Format.pp_open_hvbox fmt 0;
+  List.iter (play_directive fmt) l;
+  Format.pp_close_box fmt ()
+
+(* Outcometree.out_phrase contains a closure (which cannot be
+   marshalled) to handle arbitrary pretty printers.  Play it on a
+   recording formatter to keep most of it. *)
+
+type serializable_out_value =
+  | Array of serializable_out_value list
+  | Char of char
+  | Constr of Outcometree.out_ident * serializable_out_value list
+  | Ellipsis
+  | Float of float
+  | Int of int
+  | Int32 of int32
+  | Int64 of int64
+  | Nativeint of nativeint
+  | List of serializable_out_value list
+  | Printer of pp_directive list
+  | Record of (Outcometree.out_ident * serializable_out_value) list
+  | String of string
+  | Stuff of string
+  | Tuple of serializable_out_value list
+  | Variant of string * serializable_out_value option
+
+type serializable_out_phrase =
+  | Eval of serializable_out_value * Outcometree.out_type
+  | Signature of (Outcometree.out_sig_item * serializable_out_value option) list
+  | Exception of (exn * serializable_out_value)
+
+let empty = Signature []
+
+let rec of_outcometree_value =
+  let open Outcometree in
+  function
+  | Oval_array l -> Array(List.map of_outcometree_value l)
+  | Oval_char c -> Char c
+  | Oval_constr(oi, ov) -> Constr(oi, List.map of_outcometree_value ov)
+  | Oval_ellipsis -> Ellipsis
+  | Oval_float f -> Float f
+  | Oval_int i -> Int i
+  | Oval_int32 i -> Int32 i
+  | Oval_int64 i -> Int64 i
+  | Oval_nativeint i -> Nativeint i
+  | Oval_list l -> List(List.map of_outcometree_value l)
+  | Oval_printer p -> Printer(record p)
+  | Oval_record l -> Record(List.map of_outcometree_record l)
+  | Oval_string s -> String s
+  | Oval_stuff s -> Stuff s
+  | Oval_tuple ov -> Tuple(List.map of_outcometree_value ov)
+  | Oval_variant(s, None) -> Variant(s, None)
+  | Oval_variant(s, Some ov) -> Variant(s, Some(of_outcometree_value ov))
+and of_outcometree_record (oi, ov) =
+  (oi, of_outcometree_value ov)
+
+let of_outcometree_sig (si, maybe_ov) =
+  match maybe_ov with
+  | None -> (si, None)
+  | Some ov -> (si, Some(of_outcometree_value ov))
+
+let of_outcometree_phrase =
+  let open Outcometree in
+  function
+  | Ophr_eval(ov, ot) -> Eval(of_outcometree_value ov, ot)
+  | Ophr_signature l -> Signature(List.map of_outcometree_sig l)
+  | Ophr_exception(e, ov) -> Exception(e, of_outcometree_value ov)
+
+
+let rec to_outcometree_value =
+  let open Outcometree in
+  function
+  | Array l -> Oval_array(List.map to_outcometree_value l)
+  | Char c -> Oval_char c
+  | Constr(oi, ov) -> Oval_constr(oi, List.map to_outcometree_value ov)
+  | Ellipsis -> Oval_ellipsis
+  | Float f -> Oval_float f
+  | Int i -> Oval_int i
+  | Int32 i -> Oval_int32 i
+  | Int64 i -> Oval_int64 i
+  | Nativeint i -> Oval_nativeint i
+  | List l -> Oval_list(List.map to_outcometree_value l)
+  | Printer p -> Oval_printer(replay p)
+  | Record l -> Oval_record(List.map to_outcometree_record l)
+  | String s -> Oval_string s
+  | Stuff s -> Oval_stuff s
+  | Tuple ov -> Oval_tuple(List.map to_outcometree_value ov)
+  | Variant(s, None) -> Oval_variant(s, None)
+  | Variant(s, Some ov) -> Oval_variant(s, Some(to_outcometree_value ov))
+and to_outcometree_record (oi, ov) =
+  (oi, to_outcometree_value ov)
+
+let to_outcometree_sig (si, maybe_ov) =
+  match maybe_ov with
+  | None -> (si, None)
+  | Some ov -> (si, Some(to_outcometree_value ov))
+
+let to_outcometree_phrase =
+  let open Outcometree in
+  function
+  | Eval(ov, ot) -> Ophr_eval(to_outcometree_value ov, ot)
+  | Signature l -> Ophr_signature(List.map to_outcometree_sig l)
+  | Exception(e, ov) -> Ophr_exception(e, to_outcometree_value ov)
+
+(*
+ * Errors
+ *)
+
+(* Several errors contain Env.t which is not serializable because it
+   contains a closure.  Convert the Env.t to their summary. *)
+
+let env_of_summary s =
+  Envaux.env_from_summary s Subst.identity
+
+type serializable_typedecl_error =
+  | S_Repeated_parameter
+  | S_Duplicate_constructor of string
+  | S_Too_many_constructors
+  | S_Duplicate_label of string
+  | S_Recursive_abbrev of string
+#if ocaml_version >= (4, 02)
+  | S_Cycle_in_def of string * type_expr
+#endif
+  | S_Definition_mismatch of type_expr * Includecore.type_mismatch list
+  | S_Constraint_failed of type_expr * type_expr
+  | S_Inconsistent_constraint of Env.summary * (type_expr * type_expr) list
+  | S_Type_clash of Env.summary * (type_expr * type_expr) list
+  | S_Parameters_differ of Path.t * type_expr * type_expr
+  | S_Null_arity_external
+  | S_Missing_native_external
+  | S_Unbound_type_var of type_expr * type_declaration
+#if ocaml_version < (4, 02)
+  | S_Unbound_exception of Longident.t
+  | S_Not_an_exception of Longident.t
+#else
+  | S_Not_open_type of Path.t
+  | S_Not_extensible_type of Path.t
+  | S_Extension_mismatch of Path.t * Includecore.type_mismatch list
+  | S_Rebind_wrong_type of
+      Longident.t * Env.summary * (type_expr * type_expr) list
+  | S_Rebind_mismatch of Longident.t * Path.t * Path.t
+  | S_Rebind_private of Longident.t
+#endif
+  | S_Bad_variance of int * (bool*bool*bool) * (bool*bool*bool)
+  | S_Unavailable_type_constructor of Path.t
+  | S_Bad_fixed_type of string
+#if ocaml_version < (4, 02)
+  | S_Unbound_type_var_exc of type_expr * type_expr
+#else
+  | S_Unbound_type_var_ext of type_expr * extension_constructor
+#endif
+  | S_Varying_anonymous
+
+
+let serialize_typedecl_error =
+  let open Typedecl in
+  function
+  | Repeated_parameter -> S_Repeated_parameter
+  | Duplicate_constructor s -> S_Duplicate_constructor s
+  | Too_many_constructors -> S_Too_many_constructors
+  | Duplicate_label s -> S_Duplicate_label s
+  | Recursive_abbrev s -> S_Recursive_abbrev s
+#if ocaml_version >= (4, 02)
+  | Cycle_in_def(s, e) -> S_Cycle_in_def(s, e)
+#endif
+  | Definition_mismatch(e, l) -> S_Definition_mismatch(e, l)
+  | Constraint_failed(e1, e2) -> S_Constraint_failed(e1, e2)
+  | Inconsistent_constraint(env, l) ->
+     S_Inconsistent_constraint(Env.summary env, l)
+  | Type_clash(env, l) -> S_Type_clash(Env.summary env, l)
+  | Parameters_differ(p, e1, e2) -> S_Parameters_differ(p, e1, e2)
+  | Null_arity_external -> S_Null_arity_external
+  | Missing_native_external -> S_Missing_native_external
+  | Unbound_type_var(e, d) -> S_Unbound_type_var(e, d)
+#if ocaml_version < (4, 02)
+  | Unbound_exception id -> S_Unbound_exception id
+  | Not_an_exception id -> S_Not_an_exception id
+#else
+  | Not_open_type p -> S_Not_open_type p
+  | Not_extensible_type p -> S_Not_extensible_type p
+  | Extension_mismatch(p, l) -> S_Extension_mismatch(p, l)
+  | Rebind_wrong_type(id, env, l) ->
+     S_Rebind_wrong_type(id, Env.summary env, l)
+  | Rebind_mismatch(id, p1, p2) -> S_Rebind_mismatch(id, p1, p2)
+  | Rebind_private id -> S_Rebind_private id
+#endif
+  | Bad_variance(i, b1, b2) -> S_Bad_variance(i, b1, b2)
+  | Unavailable_type_constructor p -> S_Unavailable_type_constructor p
+  | Bad_fixed_type s -> S_Bad_fixed_type s
+#if ocaml_version < (4, 02)
+  | Unbound_type_var_exc(e1, e2) -> S_Unbound_type_var_exc(e1, e2)
+#else
+  | Unbound_type_var_ext (e, c) -> S_Unbound_type_var_ext(e, c)
+#endif
+  | Varying_anonymous -> S_Varying_anonymous
+
+
+let deserialize_typedecl_error =
+  let open Typedecl in
+  function
+  | S_Repeated_parameter -> Repeated_parameter
+  | S_Duplicate_constructor s -> Duplicate_constructor s
+  | S_Too_many_constructors -> Too_many_constructors
+  | S_Duplicate_label s -> Duplicate_label s
+  | S_Recursive_abbrev s -> Recursive_abbrev s
+#if ocaml_version >= (4, 02)
+  | S_Cycle_in_def(s, e) -> Cycle_in_def(s, e)
+#endif
+  | S_Definition_mismatch(e, l) -> Definition_mismatch(e, l)
+  | S_Constraint_failed(e1, e2) -> Constraint_failed(e1, e2)
+  | S_Inconsistent_constraint(env, l) ->
+     Inconsistent_constraint(env_of_summary env, l)
+  | S_Type_clash(env, l) -> Type_clash(env_of_summary env, l)
+  | S_Parameters_differ(p, e1, e2) -> Parameters_differ(p, e1, e2)
+  | S_Null_arity_external -> Null_arity_external
+  | S_Missing_native_external -> Missing_native_external
+  | S_Unbound_type_var(e, d) -> Unbound_type_var(e, d)
+#if ocaml_version < (4, 02)
+  | S_Unbound_exception id -> Unbound_exception id
+  | S_Not_an_exception id -> Not_an_exception id
+#else
+  | S_Not_open_type p -> Not_open_type p
+  | S_Not_extensible_type p -> Not_extensible_type p
+  | S_Extension_mismatch(p, l) -> Extension_mismatch(p, l)
+  | S_Rebind_wrong_type(id, env, l) ->
+     Rebind_wrong_type(id, env_of_summary env, l)
+  | S_Rebind_mismatch(id, p1, p2) -> Rebind_mismatch(id, p1, p2)
+  | S_Rebind_private id -> Rebind_private id
+#endif
+  | S_Bad_variance(i, b1, b2) -> Bad_variance(i, b1, b2)
+  | S_Unavailable_type_constructor p -> Unavailable_type_constructor p
+  | S_Bad_fixed_type s -> Bad_fixed_type s
+#if ocaml_version < (4, 02)
+  | S_Unbound_type_var_exc(e1, e2) -> Unbound_type_var_exc(e1, e2)
+#else
+  | S_Unbound_type_var_ext (e, c) -> Unbound_type_var_ext(e, c)
+#endif
+  | S_Varying_anonymous -> Varying_anonymous
+
+
+type serializable_error =
+  [ `Lexer of Lexer.error * Location.t
+  | `Syntaxerr of Syntaxerr.error
+  | `Typedecl of Location.t * serializable_typedecl_error
+  | `Typetexp of Location.t * Env.summary * Typetexp.error
+  | `Typecore of Location.t * Env.summary * Typecore.error
+  | `Symtable of Symtable.error
+  | `Internal_error of exn ]
+
+
+(** Outcome of evaluating toplevel phrases.
+    - [OK] means that the phrase was correctly evaluated (if the
+      phrase raises an exception, it is reported this way too).
+    - [Error (e, s)] means that the phrases were not evaluated
+      correctly because of a syntax error [e = `Syntaxerr _], a
+      type error [e = `Typecore _], an unbound module [e =
+      `Typetexp _], etc.
+      The string is the explanation the toplevel would display
+      (or an explanation of the error in case of [`Internal_error]). *)
+type out_phrase_or_error =
+  | Ok of serializable_out_phrase
+  | Error of (serializable_error * string)
+
+let send_out_phrase_or_error ch (o: out_phrase_or_error) =
+  output_value ch o;
+  flush ch

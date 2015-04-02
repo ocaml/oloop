@@ -44,6 +44,17 @@ type syntaxerr_error =
 #endif
   with sexp
 
+module Primitive = struct
+    type description =
+      Primitive.description =
+        { prim_name: string;
+          prim_arity: int;
+          prim_alloc: bool;
+          prim_native_name: string;
+          prim_native_float: bool
+        } with sexp
+  end
+
 module Ident = struct
     type t = Ident.t =
                { stamp: int; name: string; mutable flags: int } with sexp
@@ -801,6 +812,61 @@ module Types = struct
        | Clink of commutable ref
      with sexp
 
+    module Meths = struct
+        type 'a t = 'a Types.Meths.t
+
+        let sexp_of_t (f: 'a -> Sexp.t) (m: 'a t) =
+          let add_sexp k v l = Sexp.List [Sexp.Atom k; f v] :: l in
+          Sexp.List(Types.Meths.fold add_sexp m [])
+
+        let t_of_sexp (f: Sexp.t -> 'a) = function
+          | Sexp.List l ->
+             let add (m: 'a t) = function
+               | Sexp.List [Sexp.Atom k; v] -> Types.Meths.add k (f v) m
+               | _ -> failwith "Oloop: Types.Meths: incorrect sexp" in
+             List.fold l ~init:Types.Meths.empty ~f:add
+          | Sexp.Atom _ -> failwith "Oloop: Types.Meths: incorrect sexp"
+      end
+
+    module Vars = struct
+        type 'a t = 'a Types.Vars.t
+
+        let sexp_of_t (f: 'a -> Sexp.t) (m: 'a t) =
+          let add_sexp k v l = Sexp.List [Sexp.Atom k; f v] :: l in
+          Sexp.List(Types.Vars.fold add_sexp m [])
+
+        let t_of_sexp (f: Sexp.t -> 'a) = function
+          | Sexp.List l ->
+             let add (m: 'a t) = function
+               | Sexp.List [Sexp.Atom k; v] -> Types.Vars.add k (f v) m
+               | _ -> failwith "Oloop: Types.Cars: incorrect sexp" in
+             List.fold l ~init:Types.Vars.empty ~f:add
+          | Sexp.Atom _ -> failwith "Oloop: Types.Vars: incorrect sexp"
+      end
+
+    type value_description =
+      Types.value_description =
+        { val_type: type_expr;                (* Type of the value *)
+          val_kind: value_kind;
+          val_loc: Location.t;
+#if ocaml_version >= (4, 02)
+          val_attributes: Parsetree.attributes;
+#endif
+        }
+
+     and value_kind =
+       Types.value_kind =
+       | Val_reg                             (* Regular value *)
+       | Val_prim of Primitive.description   (* Primitive *)
+       | Val_ivar of mutable_flag * string   (* Instance variable (mutable ?) *)
+       | Val_self of (Ident.t * type_expr) Meths.t ref *
+                       (Ident.t * mutable_flag * virtual_flag
+                        * type_expr) Vars.t ref * string * type_expr
+                                             (* Self *)
+       | Val_anc of (string * Ident.t) list * string (* Ancestor *)
+       | Val_unbound                         (* Unbound variable *)
+     with sexp
+
     type label_description =
       Types.label_description =
         { lbl_name: string;
@@ -895,6 +961,10 @@ module Types = struct
         | Type_record of
             (Ident.t * mutable_flag * type_expr) list * record_representation
         | Type_variant of (Ident.t * type_expr list * type_expr option) list
+      and exception_declaration =
+        Types.exception_declaration =
+        { exn_args: type_expr list;
+          exn_loc: Location.t }
 #endif
       and type_transparence =
         Types.type_transparence =
@@ -902,6 +972,136 @@ module Types = struct
         | Type_new         (* "new" type *)
         | Type_private     (* private type *)
       with sexp
+
+    module Concr = struct
+        type t = Types.Concr.t
+
+        let sexp_of_t (set: t) =
+          Sexp.List(Types.Concr.fold (fun v l -> Sexp.Atom v :: l) set [])
+
+        let t_of_sexp = function
+          | Sexp.List l ->
+             let add (set: t) = function
+               | Sexp.Atom v -> Types.Concr.add v set
+               | Sexp.List _ -> failwith "Oloop: Types.Meths: incorrect sexp" in
+             List.fold l ~init:Types.Concr.empty ~f:add
+          | Sexp.Atom _ -> failwith "Oloop: Types.Concr: incorrect sexp"
+      end
+
+    type class_type =
+      Types.class_type =
+      | Cty_constr of Path.t * type_expr list * class_type
+      | Cty_signature of class_signature
+#if ocaml_version >= (4, 02)
+      | Cty_arrow of label * type_expr * class_type
+#else
+      | Cty_fun of label * type_expr * class_type
+#endif
+     and class_signature =
+       Types.class_signature = {
+#if ocaml_version >= (4, 02)
+           csig_self: type_expr;
+           csig_vars:
+             (Asttypes.mutable_flag * Asttypes.virtual_flag * type_expr) Vars.t;
+           csig_concr: Concr.t;
+           csig_inher: (Path.t * type_expr list) list
+#else
+           cty_self: type_expr;
+           cty_vars: (mutable_flag * virtual_flag * type_expr) Vars.t;
+           cty_concr: Concr.t;
+           cty_inher: (Path.t * type_expr list) list
+#endif
+         } with sexp
+
+    type class_declaration =
+      Types.class_declaration =
+      { cty_params: type_expr list;
+        mutable cty_type: class_type;
+        cty_path: Path.t;
+        cty_new: type_expr option;
+        cty_variance: Variance.t list;
+#if ocaml_version >= (4, 02)
+        cty_loc: Location.t;
+        cty_attributes: Parsetree.attributes;
+#endif
+      } with sexp
+
+    type class_type_declaration =
+      Types.class_type_declaration =
+      { clty_params: type_expr list;
+        clty_type: class_type;
+        clty_path: Path.t;
+        clty_variance: Variance.t list;
+#if ocaml_version >= (4, 02)
+        clty_loc: Location.t;
+        clty_attributes: Parsetree.attributes;
+#endif
+      } with sexp
+
+
+    type module_type =
+      Types.module_type =
+      | Mty_ident of Path.t
+      | Mty_signature of signature
+#if ocaml_version >= (4, 02)
+      | Mty_functor of Ident.t * module_type option * module_type
+      | Mty_alias of Path.t
+#else
+      | Mty_functor of Ident.t * module_type * module_type
+#endif
+     and signature = signature_item list
+
+     and signature_item =
+       Types.signature_item =
+       | Sig_value of Ident.t * value_description
+       | Sig_type of Ident.t * type_declaration * rec_status
+#if ocaml_version >= (4, 02)
+       | Sig_typext of Ident.t * extension_constructor * ext_status
+       | Sig_module of Ident.t * module_declaration * rec_status
+#else
+       | Sig_exception of Ident.t * exception_declaration
+       | Sig_module of Ident.t * module_type * rec_status
+#endif
+       | Sig_modtype of Ident.t * modtype_declaration
+       | Sig_class of Ident.t * class_declaration * rec_status
+       | Sig_class_type of Ident.t * class_type_declaration * rec_status
+
+#if ocaml_version >= (4, 02)
+     and module_declaration =
+       Types.module_declaration =
+       {
+         md_type: module_type;
+         md_attributes: Parsetree.attributes;
+         md_loc: Location.t;
+       }
+
+     and modtype_declaration =
+       Types.modtype_declaration =
+       {
+         mtd_type: module_type option;  (* None: abstract *)
+         mtd_attributes: Parsetree.attributes;
+         mtd_loc: Location.t;
+       }
+#else
+     and modtype_declaration =
+       Types.modtype_declaration =
+       | Modtype_abstract
+       | Modtype_manifest of module_type
+#endif
+     and rec_status =
+       Types.rec_status =
+       | Trec_not
+       | Trec_first
+       | Trec_next
+
+#if ocaml_version >= (4, 02)
+     and ext_status =
+       Types.ext_status =
+       | Text_first
+       | Text_next
+       | Text_exception
+#endif
+     with sexp
   end
 
 module Includecore = struct
@@ -923,15 +1123,38 @@ module Includecore = struct
   end
 
 module Env = struct
+    open Types
+
     type t = Env.t
     (* The compiler type is abstract and may contain closures.  We
        replace environments by empty ones. *)
 
-    type empty = Empty with sexp
-    let empty_sexp = sexp_of_empty Empty
+    type summary =
+      Env.summary =
+      | Env_empty
+      | Env_value of summary * Ident.t * value_description
+      | Env_type of summary * Ident.t * type_declaration
+#if ocaml_version >= (4, 02)
+      | Env_extension of summary * Ident.t * extension_constructor
+      | Env_module of summary * Ident.t * module_declaration
+#else
+      | Env_exception of summary * Ident.t * exception_declaration
+      | Env_module of summary * Ident.t * module_type
+#endif
+      | Env_modtype of summary * Ident.t * modtype_declaration
+      | Env_class of summary * Ident.t * class_declaration
+      | Env_cltype of summary * Ident.t * class_type_declaration
+      | Env_open of summary * Path.t
+#if ocaml_version >= (4, 02)
+      | Env_functor_arg of summary * Ident.t
+#endif
+      with sexp
 
-    let t_of_sexp _ = Env.empty
-    let sexp_of_t _ = empty_sexp
+    let t_of_sexp sexp =
+      Oloop_types.env_of_summary(summary_of_sexp sexp)
+
+    let sexp_of_t t =
+      sexp_of_summary(Env.summary t)
   end
 
 module Typedecl = struct
