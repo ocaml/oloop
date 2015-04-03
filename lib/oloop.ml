@@ -1,6 +1,7 @@
-module Code = Oloop_code
 open Core_kernel.Std
 open Async.Std
+
+module Script = Oloop_script
 
 (******************************************************************************)
 (* Specifying Output                                                          *)

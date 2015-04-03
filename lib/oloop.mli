@@ -1,6 +1,8 @@
 open Core_kernel.Std
 open Async_kernel.Std
 
+module Script : module type of Oloop_script
+
 type 'a t
 (** A handle to a toploop. *)
 

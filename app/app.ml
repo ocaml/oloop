@@ -3,7 +3,6 @@
  * Modified by Anil Madhavapeddy for Real World OCaml and to use Core *)
 open Core.Std
 open Async.Std
-module Code = Oloop_code
 
 type phrase = {
   input : string;
@@ -72,16 +71,20 @@ let run ?out_dir ~open_core ~open_async ~inits ~msg_with_location ~pkgs
                             | Result.Ok _ -> ()
                             | Error(_, msg) -> eprintf "ERROR: %s\n%!" msg
                            ) >>= fun () ->
-     let parts =
-       Code.split_parts_exn ~filename (In_channel.read_all filename) in
-     let eval_part (part, content) =
-       eprintf "X: %s, Part %g\n%S\n\n%!" filename part content;
-       let data = Code.split_toplevel_phrases `Anywhere content in
+     let parts : (float * string list) list =
+       ok_exn (Oloop.Script.of_string ~filename (In_channel.read_all filename))
+       |> fun l -> List.map (l : Oloop.Script.t :> Oloop.Script.part list) ~f:(fun x ->
+         Oloop.Script.(x.number, phrases_of_string x.content) )
+     in
+     let eval_part (number, phrases) =
+       eprintf "X: %s, Part %g\n%S\n\n%!" filename number
+         (String.concat ~sep:"\n" phrases);
+       let data = phrases in
        Deferred.List.map data ~f:(toploop_eval t) >>| fun data ->
        let data = <:sexp_of< (phrase, error) Result.t list >> data
                   |> Sexp.to_string in
        let base = Filename.(basename filename |> chop_extension) in
-       let out_file = sprintf "%s/%s.%f.txt" out_dir base part in
+       let out_file = sprintf "%s/%s.%f.txt" out_dir base number in
        Out_channel.write_all out_file ~data
      in
      Deferred.List.iter parts ~f:eval_part
