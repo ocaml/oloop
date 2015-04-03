@@ -9,3 +9,7 @@ true: thread
 # toploop.  We do not want the toploop to depend on Core.
 <lib/oloop_types.*>: -thread, -package(core_kernel), -package(async), -package(sexplib.syntax)
 true: debug
+
+# The tmp directory contains (local) throwaway code
+"tmp": -traverse
+"tmp": not_hygienic
