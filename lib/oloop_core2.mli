@@ -4,6 +4,7 @@ open Core_kernel.Std
 
 module Result : sig
   include module type of Result
+  with type ('a,'b) t = ('a,'b) Result.t
 
   module List : sig
     type ('a, 'b) monad = ('a, 'b) t
