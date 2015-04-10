@@ -2,39 +2,10 @@ open Core_kernel.Std
 open Async_kernel.Std
 
 module Script : module type of Oloop_script
+module Output : module type of Oloop_output
 
 type 'a t
 (** A handle to a toploop. *)
-
-(** Specifying how output should be handled. *)
-module Output : sig
-    type 'a t
-    (** Stdout and stderr output of the toploop. *)
-
-    type separate (** Stdout and stderr are collected separately. *)
-    type merged   (** Stderr is redirected to stdout. *)
-
-    val stdout : _ t -> string
-
-    val stderr : separate t -> string
-
-    val stdout_queue : _ t -> string Queue.t
-
-    val stderr_queue : separate t -> string Queue.t
-
-    type 'a kind
-    (** Specify whether one wants separate stdout and stderr or not. *)
-
-    val separate : separate kind
-    (** Specify that stdout and stderr must be collected separately. *)
-
-    val merged : merged kind
-    (** Specify that stdout and stderr must be collected in a single
-        queue, interleaving them as they appear on the terminal.  This
-        mode does not allow to distinguish between the output of each
-        channel unfortunately. *)
-  end
-
 
 (** {2 Error Handling} *)
 

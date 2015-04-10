@@ -21,7 +21,7 @@ Library "oloop"
   BuildTools:  ocamlbuild
   Modules:     Oloop
   InternalModules: Oloop_types, Oloop_conf, Oloop_ocaml, Oloop_script,
-                   Oloop_core2
+                   Oloop_output, Oloop_core2
   BuildDepends: core_kernel, async, sexplib.syntax, compiler-libs.common,
                 compiler-libs.bytecomp, bytes
 

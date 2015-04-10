@@ -2,33 +2,7 @@ open Core_kernel.Std
 open Async.Std
 
 module Script = Oloop_script
-
-(******************************************************************************)
-(* Specifying Output                                                          *)
-(******************************************************************************)module Output = struct
-    type 'a t = { stdout: string Queue.t;  stderr: string Queue.t }
-    type 'a kind = bool (* redirect stderr? *)
-    type separate
-    type merged
-
-    let separate = false
-    let merged = true
-    let stdout_queue t = t.stdout
-    let stderr_queue t = t.stderr
-
-    let string_of_queue q =
-      let len = Queue.fold q ~init:0 ~f:(fun l s -> l + String.length s) in
-      let buf = Bytes.create len in
-      let pos = ref 0 in
-      Queue.iter q ~f:(fun s -> let len = String.length s in
-                             Bytes.blit s 0 buf !pos len;
-                             pos := !pos + len);
-      buf
-
-    let stdout t = string_of_queue t.stdout
-    let stderr t = string_of_queue t.stderr
-  end
-
+module Output = Oloop_output
 
 (******************************************************************************)
 (* Error Handling                                                             *)
@@ -163,7 +137,7 @@ let create ?(prog = !default_toplevel) ?(include_dirs=[]) ?init
              else args in
   let args = if present determine_lwt then "--determine-lwt" :: args
              else args in
-  let args = if output_merged then "--redirect-stderr" :: args else args in
+  let args = match Output.kind output_merged with `Merged -> "--redirect-stderr" :: args | `Separate -> args in
   Process.create ~prog ~args () >>=? fun proc ->
   (* Wait for the oloop-top client to connect: *)
   Socket.accept (Socket.listen sock) >>= function
@@ -213,8 +187,10 @@ let eval t phrase =
   >>= fun () ->
   Reader.read_marshal t.sock
   >>= fun (out_phrase: Oloop_types.out_phrase_or_error Reader.Read_result.t) ->
-  let o = { Output.stdout = queue_of_pipe t.out;
-            Output.stderr = queue_of_pipe t.err } in
+  let o = Output.make_unsafe
+    ~stdout:(queue_of_pipe t.out)
+    ~stderr:(queue_of_pipe t.err)
+  in
   match out_phrase with
   | `Ok(Oloop_types.Ok r) ->
      return(Result.Ok(Oloop_types.to_outcometree_phrase r, o))
