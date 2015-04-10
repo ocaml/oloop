@@ -31,7 +31,7 @@ let toploop_eval t (phrase: string) =
                  stdout = Oloop.Output.stdout o;
                  stderr = Oloop.Output.stderr o }
   | Result.Error(e, msg) ->
-     Result.Error {input = phrase; loc = Oloop.location_of_error e; msg}
+     Result.Error {input = phrase; loc = Oloop.Outcome.location_of_error e; msg}
 
 let run ?out_dir ~open_core ~open_async ~inits ~msg_with_location ~pkgs
         filename =

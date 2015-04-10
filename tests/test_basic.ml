@@ -14,7 +14,7 @@ let eval t phrase =
      (* printf "OUT+ERR: %S\n" (Oloop.Output.stdout o) *)
   | Result.Error(e, msg) ->
      printf "ERROR: {|%s|}\n" msg;
-     (match Oloop.location_of_error e with
+     (match Oloop.Outcome.location_of_error e with
       | Some l -> printf "LOCATION: ";
                  Location.print_loc std_formatter l;
                  printf "\n"

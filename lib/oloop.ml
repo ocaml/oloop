@@ -3,92 +3,8 @@ open Async.Std
 
 module Script = Oloop_script
 module Output = Oloop_output
+module Outcome = Oloop_outcome
 
-(******************************************************************************)
-(* Error Handling                                                             *)
-(******************************************************************************)
-
-(* Same as Oloop_types.error but with SEXP convertion. *)
-type eval_error =
-  [ `Lexer of Oloop_ocaml.lexer_error * Oloop_ocaml.Location.t
-  | `Syntaxerr of Oloop_ocaml.syntaxerr_error
-  | `Typedecl of Oloop_ocaml.Location.t * Oloop_ocaml.Typedecl.error
-  | `Typetexp of Oloop_ocaml.Location.t * Oloop_ocaml.Env.t
-                 * Oloop_ocaml.Typetexp.error
-  | `Typecore of Oloop_ocaml.Location.t * Oloop_ocaml.Env.t
-                 * Oloop_ocaml.Typecore.error
-  | `Symtable of Oloop_ocaml.Symtable.error
-  ] with sexp
-
-type error =
-  [ eval_error
-  | `Internal_error of Exn.t ]
-
-let env_of_summary = Oloop_ocaml.Env.of_summary
-
-let deserialize_to_error : Oloop_types.serializable_error -> error =
-  function
-  | (`Lexer _ | `Syntaxerr _ | `Symtable _ | `Internal_error _) as e -> e
-  | `Typedecl(loc, e) ->
-     `Typedecl(loc, Oloop_types.deserialize_typedecl_error
-                      ~env_of_summary e)
-  | `Typetexp(loc, env, e) -> `Typetexp(loc, env_of_summary env, e)
-  | `Typecore(loc, env, e) -> `Typecore(loc, env_of_summary env, e)
-
-let location_of_error : error -> Location.t option = function
-  | `Lexer(_, l) | `Typedecl(l, _) | `Typetexp(l, _, _)
-  | `Typecore(l, _, _) -> Some l
-  | `Syntaxerr _ | `Symtable _ | `Internal_error _ -> None
-
-let report_error ?(msg_with_location=false) ppf e =
-  (* Do the reverse than the conversion in oloop-top in order to be able
-     to use the compiler reporting functions.  The difference is that
-     all environments are empty (they cannot be serialized). *)
-  let exn = match e with
-    | `Lexer(e, l) -> Lexer.Error(e, l)
-    | `Syntaxerr e -> Syntaxerr.Error e
-    | `Typedecl(l, e) -> Typedecl.Error(l, e)
-    | `Typetexp(l, env, e) -> Typetexp.Error(l, env, e)
-    | `Typecore(l, env, e) -> Typecore.Error(l, env, e)
-    | `Symtable e -> Symtable.Error e
-    | `Internal_error e -> e in
-  if msg_with_location then
-    Errors.report_error ppf exn
-  else (
-    (* The location of the error is reported because the terminal is
-       detected as dumb.  Remove it "manually". *)
-    let b = Buffer.create 64 in
-    Errors.report_error (Format.formatter_of_buffer b) exn;
-    let len = Buffer.length b in
-    let loc_present =
-      Buffer.(len > 3 && nth b 0 = 'C' && nth b 1 = 'h' && nth b 2 = 'a') in
-    let ofs =
-      if loc_present then (
-        (* Skip the first line. *)
-        let ofs = ref 0 in
-        while !ofs < len && Buffer.nth b !ofs <> '\n' do incr ofs done;
-        !ofs + 1
-      )
-      else 0 in
-    let err = try Buffer.sub b ofs (len - ofs)
-              with Invalid_argument _ -> "" in
-    Format.pp_print_string ppf err
-  )
-
-let to_error (e, msg) =
-  match e with
-  | `Internal_error exn ->
-     Error.tag (Error.of_exn exn) msg
-  | #eval_error as e ->
-     let here = match location_of_error e with
-       | Some loc -> Some loc.Location.loc_start
-       | None -> None in
-     Error.create ?here msg e sexp_of_eval_error
-
-
-(******************************************************************************)
-(* Evaluators                                                                 *)
-(******************************************************************************)
 let default_toplevel =
   ref(if Caml.Sys.file_exists "./oloop-top.byte" then
         "./oloop-top.byte" (* test *)
@@ -198,7 +114,7 @@ let eval t phrase =
      (* When the code was not correclty evaluated, the [phrase] is
         outputted on stdout with terminal codes to underline the error
         location.  Since we have access to the location, this is useless. *)
-     return(Result.Error(deserialize_to_error e, msg))
+     return(Result.Error(Outcome.deserialize_to_error e, msg))
   | `Eof ->
      return(Result.Error(`Internal_error End_of_file,
                          "The toploop did not return a result"))
@@ -206,7 +122,7 @@ let eval t phrase =
 let eval_or_error t phrase =
   eval t phrase >>| function
   | Result.Ok _ as r -> r
-  | Result.Error err -> Result.Error(to_error err)
+  | Result.Error err -> Result.Error(Outcome.to_error err)
 
 
 (******************************************************************************)

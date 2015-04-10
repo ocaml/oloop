@@ -20,7 +20,7 @@ let eval_phrases t =
            Ok()
         | Result.Error(e, msg) ->
            Format.printf "[36m%s[0m" msg;
-           Oloop.report_error Format.std_formatter e;
+           Oloop.Outcome.report_error Format.std_formatter e;
            Ok()
        )
 

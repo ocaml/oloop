@@ -3,37 +3,10 @@ open Async_kernel.Std
 
 module Script : module type of Oloop_script
 module Output : module type of Oloop_output
+module Outcome : module type of Oloop_outcome
 
 type 'a t
 (** A handle to a toploop. *)
-
-(** {2 Error Handling} *)
-
-type eval_error =
-  [ `Lexer of Lexer.error * Location.t
-  | `Syntaxerr of Syntaxerr.error
-  | `Typedecl of Location.t * Typedecl.error
-  | `Typetexp of Location.t * Env.t * Typetexp.error
-  | `Typecore of Location.t * Env.t * Typecore.error
-  | `Symtable of Symtable.error
-  ] with sexp
-
-type error = [ eval_error | `Internal_error of exn ]
-
-val location_of_error : error -> Location.t option
-(** [location_of_error e] returns the error location if any is present. *)
-
-val report_error : ?msg_with_location: bool ->
-                   Format.formatter -> error -> unit
-(** [report_error ppf e] write an error message corresponding to [e]
-    to the formatter [ppf] just as the toploop would do it. *)
-
-val to_error : error * string -> Error.t
-(** [to_error(e, msg)] returns an [Error.t] value corresponding to
-    the error [e] with message [msg]. *)
-
-
-(** {2 Evaluators} *)
 
 val create : ?prog: string ->
              ?include_dirs: string list ->
@@ -97,7 +70,7 @@ val with_toploop :
 
 val eval :
   'a t -> string
-  -> (Outcometree.out_phrase * 'a Output.t, error * string) Deferred.Result.t
+  -> (Outcometree.out_phrase * 'a Output.t, Outcome.error * string) Deferred.Result.t
 (** [eval t phrase] evaluate [phrase] in the toploop [t] and returns a
     (deferred) couple [(res, out)] where [res] is the result of
     evaluating the [phrase], an {!Outcometree.out_phrase} if [phrase]
