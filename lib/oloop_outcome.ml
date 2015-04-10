@@ -1,7 +1,7 @@
 open Core_kernel.Std
 
 (* Same as Oloop_types.error but with SEXP convertion. *)
-type eval_error = [
+type invalid_phrase = [
 | `Lexer of Oloop_ocaml.lexer_error * Oloop_ocaml.Location.t
 | `Syntaxerr of Oloop_ocaml.syntaxerr_error
 | `Typedecl of Oloop_ocaml.Location.t * Oloop_ocaml.Typedecl.error
@@ -12,14 +12,19 @@ type eval_error = [
 | `Symtable of Oloop_ocaml.Symtable.error
 ] with sexp
 
-type error = [
-| eval_error
+type uneval = [
+| invalid_phrase
 | `Internal_error of Exn.t
+]
+
+type 'a t = [
+| `Eval of Outcometree.out_phrase * 'a Oloop_output.t
+| `Uneval of uneval * string
 ]
 
 let env_of_summary = Oloop_ocaml.Env.of_summary
 
-let deserialize_to_error : Oloop_types.serializable_error -> error =
+let deserialize_to_uneval : Oloop_types.serializable_error -> uneval =
   function
   | (`Lexer _ | `Syntaxerr _ | `Symtable _ | `Internal_error _) as e -> e
   | `Typedecl(loc, e) ->
@@ -28,12 +33,12 @@ let deserialize_to_error : Oloop_types.serializable_error -> error =
   | `Typetexp(loc, env, e) -> `Typetexp(loc, env_of_summary env, e)
   | `Typecore(loc, env, e) -> `Typecore(loc, env_of_summary env, e)
 
-let location_of_error : error -> Location.t option = function
+let location_of_uneval : uneval -> Location.t option = function
   | `Lexer(_, l) | `Typedecl(l, _) | `Typetexp(l, _, _)
   | `Typecore(l, _, _) -> Some l
   | `Syntaxerr _ | `Symtable _ | `Internal_error _ -> None
 
-let report_error ?(msg_with_location=false) ppf e =
+let report_uneval ?(msg_with_location=false) ppf e =
   (* Do the reverse than the conversion in oloop-top in order to be able
      to use the compiler reporting functions.  The difference is that
      all environments are empty (they cannot be serialized). *)
@@ -68,12 +73,12 @@ let report_error ?(msg_with_location=false) ppf e =
     Format.pp_print_string ppf err
   )
 
-let to_error (e, msg) =
+let to_uneval (e, msg) =
   match e with
   | `Internal_error exn ->
      Error.tag (Error.of_exn exn) msg
-  | #eval_error as e ->
-     let here = match location_of_error e with
+  | #invalid_phrase as e ->
+     let here = match location_of_uneval e with
        | Some loc -> Some loc.Location.loc_start
        | None -> None in
-     Error.create ?here msg e sexp_of_eval_error
+     Error.create ?here msg e sexp_of_invalid_phrase

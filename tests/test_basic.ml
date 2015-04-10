@@ -5,16 +5,16 @@ open Format
 let eval t phrase =
   printf "phrase: %S\n%!" phrase;
   Oloop.eval t phrase >>| function
-  | Result.Ok(out_phrase, o) ->
+  | `Eval(out_phrase, o) ->
      let b = Buffer.create 1024 in
      !Oprint.out_phrase (formatter_of_buffer b) out_phrase;
      printf "OUTCOME: [%s]\n%!" (Buffer.contents b);
      printf "OUT: %S\nERR: %S\n%!" (Oloop.Output.stdout o)
                                    (Oloop.Output.stderr o)
      (* printf "OUT+ERR: %S\n" (Oloop.Output.stdout o) *)
-  | Result.Error(e, msg) ->
+  | `Uneval(e, msg) ->
      printf "ERROR: {|%s|}\n" msg;
-     (match Oloop.Outcome.location_of_error e with
+     (match Oloop.Outcome.location_of_uneval e with
       | Some l -> printf "LOCATION: ";
                  Location.print_loc std_formatter l;
                  printf "\n"

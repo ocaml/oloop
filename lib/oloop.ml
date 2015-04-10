@@ -93,7 +93,7 @@ let queue_of_pipe p =
   | `Eof | `Nothing_available -> Queue.create()
   | `Ok q -> q
 
-let eval t phrase =
+let eval (t: 'a t) phrase =
   let top = Process.stdin t.proc in
   Writer.write top (Int.to_string (String.length phrase) ^ "\n");
   Writer.write top phrase;
@@ -109,20 +109,20 @@ let eval t phrase =
   in
   match out_phrase with
   | `Ok(Oloop_types.Ok r) ->
-     return(Result.Ok(Oloop_types.to_outcometree_phrase r, o))
+     return(`Eval(Oloop_types.to_outcometree_phrase r, o))
   | `Ok(Oloop_types.Error(e, msg)) ->
      (* When the code was not correclty evaluated, the [phrase] is
         outputted on stdout with terminal codes to underline the error
         location.  Since we have access to the location, this is useless. *)
-     return(Result.Error(Outcome.deserialize_to_error e, msg))
+     return(`Uneval(Outcome.deserialize_to_uneval e, msg))
   | `Eof ->
-     return(Result.Error(`Internal_error End_of_file,
+     return(`Uneval(`Internal_error End_of_file,
                          "The toploop did not return a result"))
 
 let eval_or_error t phrase =
   eval t phrase >>| function
-  | Result.Ok _ as r -> r
-  | Result.Error err -> Result.Error(Outcome.to_error err)
+  | `Eval x -> Ok x
+  | `Uneval err -> Error(Outcome.to_uneval err)
 
 
 (******************************************************************************)

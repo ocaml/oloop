@@ -22,7 +22,7 @@ let string_of_queue q =
 
 let toploop_eval t (phrase: string) =
   Oloop.eval t phrase >>| function
-  | Result.Ok (out_phrase, o) ->
+  | `Eval (out_phrase, o) ->
      let out_phrase = Oloop.phrase_remove_underscore_names out_phrase in
      let b = Buffer.create 1024 in
      !Oprint.out_phrase (Format.formatter_of_buffer b) out_phrase;
@@ -30,8 +30,8 @@ let toploop_eval t (phrase: string) =
                  output = Buffer.contents b;
                  stdout = Oloop.Output.stdout o;
                  stderr = Oloop.Output.stderr o }
-  | Result.Error(e, msg) ->
-     Result.Error {input = phrase; loc = Oloop.Outcome.location_of_error e; msg}
+  | `Uneval(e, msg) ->
+     Result.Error {input = phrase; loc = Oloop.Outcome.location_of_uneval e; msg}
 
 let run ?out_dir ~open_core ~open_async ~inits ~msg_with_location ~pkgs
         filename =
@@ -68,8 +68,8 @@ let run ?out_dir ~open_core ~open_async ~inits ~msg_with_location ~pkgs
      Deferred.List.iter initial_phrases
                         ~f:(fun phrase ->
                             Oloop.eval t phrase >>| function
-                            | Result.Ok _ -> ()
-                            | Error(_, msg) -> eprintf "ERROR: %s\n%!" msg
+                            | `Eval _ -> ()
+                            | `Uneval(_, msg) -> eprintf "ERROR: %s\n%!" msg
                            ) >>= fun () ->
      let parts : (float * string list) list =
        ok_exn (Oloop.Script.of_string ~filename (In_channel.read_all filename))

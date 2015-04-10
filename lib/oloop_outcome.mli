@@ -1,24 +1,29 @@
-(** Outcome of evaluating a phrase. Attempting to evaluate an
-    arbitrary string as an OCaml phrase can lead to a variety of
-    outcomes:
+(** Outcome of trying to evaluating a phrase. Attempting to evaluate
+    an arbitrary string as an OCaml phrase can lead to a variety of
+    outcomes, all of which are captured by [t]:
 
-    - There can be a syntax or type error, preventing
-    evaluation. Nonetheless, we consider information about the error
-    to be the outcome.
+    - [`Eval (Ophr_eval | Ophr_signature)] - The phrase type checks,
+    and the OCaml toplevel successfully evaluates it. We provide the
+    semantic result as an OCaml [out_phrase], and any output that may
+    have been printed to stdout/stderr.
 
-    - The phrase type checks, the OCaml toplevel evaluates it, but an
-    exception occurs. The outcome is information about the exception,
-    and also any possible output printed to stdout/stderr.
+    - [`Eval Ophr_exception] - The phrase type checks, the OCaml
+    toplevel evaluates it, but an exception is raised. We provide
+    information about the exception as an OCaml [out_phrase], and any
+    output that may have been printed to stdout/stderr.
 
-    - The phrase type checks, the OCaml toplevel evaluates it, and
-    there is no exception. The outcome is any possible output printed
-    to stdout/stderr and the semantic result, e.g. "2+3" evaluates to
-    "5".
+    - [`Uneval invalid_phrase] - The phrase contains a syntax or type
+    error, preventing evaluation. We provide compiler constructs
+    representing the various possible errors, and also a string with a
+    human readable explanation of the error.
+
+    - [`Uneval `Internal_error] - The phrase could not be evaluated
+    because the OCaml compiler itself raised an exception.
 
 *)
 open Core_kernel.Std
 
-type eval_error = [
+type invalid_phrase = [
 | `Lexer of Lexer.error * Location.t
 | `Syntaxerr of Syntaxerr.error
 | `Typedecl of Location.t * Typedecl.error
@@ -27,22 +32,26 @@ type eval_error = [
 | `Symtable of Symtable.error
 ] with sexp
 
-type error = [
-| eval_error
+type uneval = [
+| invalid_phrase
 | `Internal_error of Exn.t
 ]
 
-val deserialize_to_error : Oloop_types.serializable_error -> error
+type 'a t = [
+| `Eval of Outcometree.out_phrase * 'a Oloop_output.t
+| `Uneval of uneval * string
+]
 
-val location_of_error : error -> Location.t option
-(** [location_of_error e] returns the error location if any is present. *)
+val deserialize_to_uneval : Oloop_types.serializable_error -> uneval
 
-val report_error : ?msg_with_location: bool ->
-                   Format.formatter -> error -> unit
+val location_of_uneval : uneval -> Location.t option
+(** [location_of_uneval e] returns the error location if any is present. *)
+
+val report_uneval : ?msg_with_location: bool ->
+                   Format.formatter -> uneval -> unit
 (** [report_error ppf e] write an error message corresponding to [e]
     to the formatter [ppf] just as the toploop would do it. *)
 
-val to_error : error * string -> Error.t
-(** [to_error(e, msg)] returns an [Error.t] value corresponding to
+val to_uneval : uneval * string -> Error.t
+(** [to_uneval(e, msg)] returns an [Error.t] value corresponding to
     the error [e] with message [msg]. *)
-

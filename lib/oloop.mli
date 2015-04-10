@@ -2,7 +2,13 @@ open Core_kernel.Std
 open Async_kernel.Std
 
 module Script : module type of Oloop_script
+
 module Output : module type of Oloop_output
+  with type 'a t = 'a Oloop_output.t
+  with type separate = Oloop_output.separate
+  with type merged = Oloop_output.merged
+  with type 'a kind = 'a Oloop_output.kind
+
 module Outcome : module type of Oloop_outcome
 
 type 'a t
@@ -68,17 +74,8 @@ val with_toploop :
     This is convenient in order use to the bind operator [>>=?] to
     chain computations in [f]. *)
 
-val eval :
-  'a t -> string
-  -> (Outcometree.out_phrase * 'a Output.t, Outcome.error * string) Deferred.Result.t
-(** [eval t phrase] evaluate [phrase] in the toploop [t] and returns a
-    (deferred) couple [(res, out)] where [res] is the result of
-    evaluating the [phrase], an {!Outcometree.out_phrase} if [phrase]
-    evaluated normally or raised an exception and an [Error(e, msg)]
-    if [phrase] did not evaluate correctly be it for a syntax error, a
-    type error,..., where [e] ie the error and [msg] is the error
-    message displayed in the toplevel.  In both case, [out] is the
-    text outputed on stdout and stderr. *)
+val eval : 'a t -> string -> 'a Outcome.t Deferred.t
+(** [eval t phrase] evaluates [phrase] in the toploop [t]. *)
 
 val eval_or_error :
   'a t -> string -> (Outcometree.out_phrase * 'a Output.t) Deferred.Or_error.t
