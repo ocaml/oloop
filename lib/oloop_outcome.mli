@@ -18,8 +18,8 @@
     human readable explanation of the error.
 
     - [`Uneval `Internal_error] - The phrase could not be evaluated
-    because the OCaml compiler itself raised an exception.
-
+    because the OCaml toploop raised an exception not captured by
+    the [invalid_phrase] enumeration.
 *)
 open Core_kernel.Std
 
