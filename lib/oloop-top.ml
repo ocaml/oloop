@@ -19,6 +19,10 @@ module CiM_ = CamlinternalMod
 module Gl__ = Genlex
 module Oo__ = Oo
 
+let add_dir_from_env env =
+  try Topdirs.dir_directory (Sys.getenv env)
+  with Not_found -> ()
+
 let initialize_toplevel ~redirect_stderr =
   Sys.interactive := true;
   Toploop.set_paths ();
@@ -26,8 +30,8 @@ let initialize_toplevel ~redirect_stderr =
   Toploop.input_name := "//toplevel//";
   Location.input_name := "//toplevel//";
   Toploop.max_printer_steps := 20;
-  (try Topdirs.dir_directory (Sys.getenv "OCAML_TOPLEVEL_PATH")
-   with Not_found -> ());
+  add_dir_from_env "OCAML_TOPLEVEL_PATH";
+  add_dir_from_env "CAML_LD_LIBRARY_PATH";
   if redirect_stderr then
     Unix.dup2 Unix.stdout Unix.stderr;
   (* Add #load *)
