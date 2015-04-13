@@ -30,9 +30,6 @@ let eval_phrases t =
         !Oprint.out_phrase Format.std_formatter out_phrase;
         Format.printf "@?";
        )
-  >>= fun _ ->
-  return(Result.Ok())
-
 
 let () =
   ignore(Oloop.with_toploop Oloop.Output.separate ~f:eval_phrases
