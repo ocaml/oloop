@@ -79,8 +79,8 @@ val eval : 'a t -> string -> 'a Outcome.t Deferred.t
 
 val eval_or_error :
   'a t -> string -> (Outcometree.out_phrase * 'a Output.t) Deferred.Or_error.t
-(** Same as {!eval} except that the error is transformed into an
-   [Error.t] using the function {!to_error}. *)
+(** Same as {!eval} except that the [`Uneval] result is transformed
+   into an [Error.t] using the function {!Outcome.to_uneval}. *)
 
 
 (** {2 Miscellaneous} *)
