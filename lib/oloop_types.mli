@@ -1,9 +1,16 @@
 (** Module shared between Oloop and the toploop program oloop-top to
     ensure type communication. *)
 
-(** Type equivalent to Outcometree.out_phrase except that [out_value]
+type serializable_out_value
+(** Type equivalent to [Outcometree.out_value] except that it is
+    serializable. *)
+
+(** Type equivalent to [Outcometree.out_phrase] except that [out_value]
     is replaced by the above serializable version. *)
-type serializable_out_phrase
+type serializable_out_phrase =
+  | Eval of serializable_out_value * Outcometree.out_type
+  | Signature of (Outcometree.out_sig_item * serializable_out_value option) list
+  | Exception of (exn * serializable_out_value)
 
 val empty : serializable_out_phrase
 (** Out phrase that indicates that no particular value is returned by

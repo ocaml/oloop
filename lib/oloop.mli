@@ -41,7 +41,8 @@ val create : ?prog: string ->
 
     @param silent_directives if set, the toplevel directives (existing
     ones or new ones) will return an empty structure — thus
-    [Oprint.out_phrase] will print nothing.
+    [Oprint.out_phrase] will print nothing — unless they raise an
+    exception.
 
     @param determine_deferred Automatically determine anonymous
     [Deferred.t] values as Utop does.

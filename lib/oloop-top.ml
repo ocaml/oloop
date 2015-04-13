@@ -60,7 +60,11 @@ let eval ~msg_with_location ~silent_directives lexbuf =
     match phrase with
     | Parsetree.Ptop_def _ -> Ok !out_phrase
     | Parsetree.Ptop_dir _ ->
-       if silent_directives then Ok(Oloop_types.empty)
+       (* Only silence the output if everything is fine. *)
+       if silent_directives then
+         Ok(match !out_phrase with
+            | Oloop_types.Exception _ -> !out_phrase
+            | Eval _ | Signature _ -> Oloop_types.empty)
        else Ok !out_phrase
   with
   | End_of_file -> exit 0

@@ -5,8 +5,9 @@ open Format
 
 let main () =
   let eval_phrases t =
-    Oloop.eval_or_error t "#use \"topfind\"" >>=? fun _ ->
-    Oloop.eval_or_error t "#require \"lacaml\"" >>=? fun (out_phrase, o) ->
+    Oloop.eval_or_error t "#use \"topfind\"" >>=? fun (out_phrase, _) ->
+    !Oprint.out_phrase std_formatter out_phrase;
+    Oloop.eval_or_error t "#require \"lacaml\"" >>=? fun (out_phrase, _) ->
     !Oprint.out_phrase std_formatter out_phrase;
 
     let phrase = "open Lacaml.D
