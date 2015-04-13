@@ -18,6 +18,7 @@ module ML__ = MoreLabels
 module CiM_ = CamlinternalMod
 module Gl__ = Genlex
 module Oo__ = Oo
+module So__ = Sort (* Deprecated but used by ocamlfind anyway *)
 
 let add_dir_from_env env =
   try Topdirs.dir_directory (Sys.getenv env)
