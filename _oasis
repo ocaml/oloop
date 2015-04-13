@@ -79,6 +79,14 @@ Executable "error"
   Install:        false
 
 
+Document API
+  Title:           API reference for Oloop
+  Type:            OCamlbuild (0.4)
+  InstallDir:      $docdir/api
+  BuildTools:      ocamldoc, ocamlbuild
+  XOCamlbuildPath: .
+  XOCamlbuildLibraries: oloop
+
 SourceRepository master
   Type:     git
   Location: https://github.com/agarwal/oloop.git
