@@ -53,7 +53,9 @@ let create ?(prog = !default_toplevel) ?(include_dirs=[]) ?init
              else args in
   let args = if present determine_lwt then "--determine-lwt" :: args
              else args in
-  let args = match Output.kind output_merged with `Merged -> "--redirect-stderr" :: args | `Separate -> args in
+  let args = match Output.kind output_merged with
+    | `Merged -> "--redirect-stderr" :: args
+    | `Separate -> args in
   Process.create ~prog ~args () >>=? fun proc ->
   (* Wait for the oloop-top client to connect: *)
   Socket.accept (Socket.listen sock) >>= function
@@ -104,8 +106,8 @@ let eval (t: 'a t) phrase =
   Reader.read_marshal t.sock
   >>= fun (out_phrase: Oloop_types.out_phrase_or_error Reader.Read_result.t) ->
   let o = Output.make_unsafe
-    ~stdout:(queue_of_pipe t.out)
-    ~stderr:(queue_of_pipe t.err)
+            ~stdout:(queue_of_pipe t.out)
+            ~stderr:(queue_of_pipe t.err)
   in
   match out_phrase with
   | `Ok(Oloop_types.Ok r) ->
