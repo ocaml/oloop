@@ -116,7 +116,12 @@ let main ~msg_with_location ~silent_directives ~redirect_stderr ~sock_name =
     flush stdout;
     Format.pp_print_flush Format.err_formatter ();
     flush stderr;
-    send_out_phrase_or_error ch outcome;
+    (try send_out_phrase_or_error ch outcome
+     with Invalid_argument msg as e ->
+       (* The marshalling failed *)
+       let msg = "oloop-top: sending the phrase eval outcome failed \
+                  because: " ^ msg in
+       send_out_phrase_or_error ch (Error(`Internal_error e, msg)));
   done
 
 let () =
