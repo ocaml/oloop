@@ -73,7 +73,7 @@ let report_uneval ?(msg_with_location=false) ppf e =
     Format.pp_print_string ppf err
   )
 
-let to_uneval (e, msg) =
+let uneval_to_error (e, msg) =
   match e with
   | `Internal_error exn ->
      Error.tag (Error.of_exn exn) msg

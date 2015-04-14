@@ -52,6 +52,6 @@ val report_uneval : ?msg_with_location: bool ->
 (** [report_error ppf e] write an error message corresponding to [e]
     to the formatter [ppf] just as the toploop would do it. *)
 
-val to_uneval : uneval * string -> Error.t
-(** [to_uneval(e, msg)] returns an [Error.t] value corresponding to
+val uneval_to_error : uneval * string -> Error.t
+(** [uneval_to_error(e, msg)] returns an [Error.t] value corresponding to
     the error [e] with message [msg]. *)

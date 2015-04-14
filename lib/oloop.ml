@@ -124,7 +124,7 @@ let eval (t: 'a t) phrase =
 let eval_or_error t phrase =
   eval t phrase >>| function
   | `Eval x -> Ok x
-  | `Uneval err -> Error(Outcome.to_uneval err)
+  | `Uneval err -> Error(Outcome.uneval_to_error err)
 
 
 (******************************************************************************)
