@@ -71,7 +71,7 @@ let of_string ~filename contents =
     Ok parts
   else
     error "part numbers not strictly increasing"
-      part_nums <:sexp_of< float list >>
+      (filename,part_nums) <:sexp_of< string * float list >>
 
 let of_file filename =
   Reader.file_contents filename
