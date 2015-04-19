@@ -59,8 +59,9 @@ let create ?(prog = !default_toplevel) ?(include_dirs=[]) ?init
   Process.create ~prog ~args () >>=? fun proc ->
   (* Wait for the oloop-top client to connect: *)
   Socket.accept (Socket.listen sock) >>= function
-  | `Ok(sock, _) ->
-     let sock = Reader.create (Socket.fd sock) in
+  | `Ok(conn_sock, _) ->
+     Unix.close (Socket.fd sock) >>= fun () ->
+     let sock = Reader.create (Socket.fd conn_sock) in
      let out = Reader.pipe (Process.stdout proc)
      and err = Reader.pipe (Process.stderr proc) in
      return(Result.Ok { proc;  out; err;  sock_path;  sock })
@@ -87,9 +88,10 @@ let with_toploop ?prog ?include_dirs ?init ?no_app_functors ?principal
          ?silent_directives ?determine_deferred ?determine_lwt
          output_merged
   >>= function
-  | Result.Ok t -> f t
-                  >>= fun r -> close t
-                  >>= fun () -> return r
+  | Result.Ok t -> (try f t
+                    with e -> close t >>= fun () -> raise e)
+                   >>= fun r -> close t
+                   >>= fun () -> return r
   | Result.Error _ as e -> return e
 
 let queue_of_pipe p =

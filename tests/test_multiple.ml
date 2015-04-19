@@ -10,7 +10,7 @@ let f (x:int) : unit Or_error.t Deferred.t =
   Oloop.(with_toploop Output.merged ~f)
 
 let main () =
-  Deferred.Or_error.List.iter ~f (List.init 1000 ~f:Fn.id)
+  Deferred.Or_error.List.iter ~f (List.init 1100 ~f:Fn.id)
 
 let () =
   ignore(main() >>|? fun _ -> shutdown 0);
