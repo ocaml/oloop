@@ -74,6 +74,8 @@ let close t =
   Writer.close top >>= fun () ->
   Reader.close (Process.stdout t.proc) >>= fun () ->
   Reader.close (Process.stderr t.proc) >>= fun () ->
+  Unix.wait (`Pid(Process.pid t.proc)) >>= fun _ ->
+  Reader.close t.sock >>= fun () ->
   Unix.unlink t.sock_path
 
 let with_toploop ?prog ?include_dirs ?init ?no_app_functors ?principal
