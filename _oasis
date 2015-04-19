@@ -64,7 +64,7 @@ Executable "deferred"
   Path:           tests
   Build$:         flag(tests)
   MainIs:         test_deferred.ml
-  BuildDepends:   oloop, async_kernel
+  BuildDepends:   oloop, async
   CompiledObject: best
   BuildTools:     ocamlbuild
   Install:        false
@@ -73,7 +73,16 @@ Executable "error"
   Path:           tests
   Build$:         flag(tests)
   MainIs:         test_error.ml
-  BuildDepends:   oloop, async_kernel
+  BuildDepends:   oloop, async
+  CompiledObject: best
+  BuildTools:     ocamlbuild
+  Install:        false
+
+Executable "multiple"
+  Path:           tests
+  Build$:         flag(tests)
+  MainIs:         test_multiple.ml
+  BuildDepends:   oloop, async
   CompiledObject: best
   BuildTools:     ocamlbuild
   Install:        false
