@@ -1,8 +1,11 @@
+let () =
+  try Topdirs.dir_directory (Sys.getenv "OCAML_TOPLEVEL_PATH")
+  with _ -> ();;
+
 #use "topfind";;
 #thread;;
-#require "core async compiler-libs.toplevel";;
+#require "bytes core async compiler-libs.common compiler-libs.bytecomp";;
 #directory "_build/lib";;
 #load "oloop.cma";;
 open Core.Std;;
 open Async.Std;;
-open Oloop;;
