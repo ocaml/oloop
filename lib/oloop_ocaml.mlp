@@ -15,8 +15,8 @@ module Location = struct
   end
 
 module Lexer = struct
-type error =
-  Lexer.error =
+  type error =
+    Lexer.error =
   | Illegal_character of char
   | Illegal_escape of string
   | Unterminated_comment of Location.t
@@ -32,8 +32,8 @@ type error =
 end
 
 module Syntaxerr = struct
-type error =
-  Syntaxerr.error =
+  type error =
+    Syntaxerr.error =
   | Unclosed of Location.t * string * Location.t * string
   | Expecting of Location.t * string
 #if ocaml_version >= (4, 02)
