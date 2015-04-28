@@ -14,7 +14,8 @@ module Location = struct
         } with sexp
   end
 
-type lexer_error =
+module Lexer = struct
+type error =
   Lexer.error =
   | Illegal_character of char
   | Illegal_escape of string
@@ -28,8 +29,10 @@ type lexer_error =
   | Keyword_as_label of string
   | Literal_overflow of string
   with sexp
+end
 
-type syntaxerr_error =
+module Syntaxerr = struct
+type error =
   Syntaxerr.error =
   | Unclosed of Location.t * string * Location.t * string
   | Expecting of Location.t * string
@@ -43,6 +46,7 @@ type syntaxerr_error =
   | Ill_formed_ast of Location.t * string
 #endif
   with sexp
+end
 
 module Primitive = struct
     type description =

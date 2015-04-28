@@ -2,8 +2,8 @@ open Core_kernel.Std
 
 (* Same as Oloop_types.error but with SEXP convertion. *)
 type invalid_phrase = [
-| `Lexer of Oloop_ocaml.Location.t * Oloop_ocaml.lexer_error
-| `Syntaxerr of Oloop_ocaml.syntaxerr_error
+| `Lexer of Oloop_ocaml.Location.t * Oloop_ocaml.Lexer.error
+| `Syntaxerr of Oloop_ocaml.Syntaxerr.error
 | `Typedecl of Oloop_ocaml.Location.t * Oloop_ocaml.Typedecl.error
 | `Typetexp of Oloop_ocaml.Location.t * Oloop_ocaml.Env.t
                * Oloop_ocaml.Typetexp.error
