@@ -2,7 +2,7 @@ open Core_kernel.Std
 
 (* Same as Oloop_types.error but with SEXP convertion. *)
 type invalid_phrase = [
-| `Lexer of Oloop_ocaml.lexer_error * Oloop_ocaml.Location.t
+| `Lexer of Oloop_ocaml.Location.t * Oloop_ocaml.lexer_error
 | `Syntaxerr of Oloop_ocaml.syntaxerr_error
 | `Typedecl of Oloop_ocaml.Location.t * Oloop_ocaml.Typedecl.error
 | `Typetexp of Oloop_ocaml.Location.t * Oloop_ocaml.Env.t
@@ -34,7 +34,7 @@ let deserialize_to_uneval : Oloop_types.serializable_error -> uneval =
   | `Typecore(loc, env, e) -> `Typecore(loc, env_of_summary env, e)
 
 let location_of_uneval : uneval -> Location.t option = function
-  | `Lexer(_, l) | `Typedecl(l, _) | `Typetexp(l, _, _)
+  | `Lexer(l, _) | `Typedecl(l, _) | `Typetexp(l, _, _)
   | `Typecore(l, _, _) -> Some l
   | `Syntaxerr _ | `Symtable _ | `Internal_error _ -> None
 
@@ -43,7 +43,7 @@ let report_uneval ?(msg_with_location=false) ppf e =
      to use the compiler reporting functions.  The difference is that
      all environments are empty (they cannot be serialized). *)
   let exn = match e with
-    | `Lexer(e, l) -> Lexer.Error(e, l)
+    | `Lexer(l, e) -> Lexer.Error(e, l)
     | `Syntaxerr e -> Syntaxerr.Error e
     | `Typedecl(l, e) -> Typedecl.Error(l, e)
     | `Typetexp(l, env, e) -> Typetexp.Error(l, env, e)

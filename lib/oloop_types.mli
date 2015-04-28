@@ -28,7 +28,7 @@ type serializable_typedecl_error
 
 (** Enumeration of errors. *)
 type serializable_error =
-  [ `Lexer of Lexer.error * Location.t
+  [ `Lexer of Location.t * Lexer.error
   | `Syntaxerr of Syntaxerr.error
   | `Typedecl of Location.t * serializable_typedecl_error
   | `Typetexp of Location.t * Env.summary * Typetexp.error

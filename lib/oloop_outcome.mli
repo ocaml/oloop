@@ -24,7 +24,7 @@
 open Core_kernel.Std
 
 type invalid_phrase = [
-| `Lexer of Lexer.error * Location.t
+| `Lexer of Location.t * Lexer.error
 | `Syntaxerr of Syntaxerr.error
 | `Typedecl of Location.t * Typedecl.error
 | `Typetexp of Location.t * Env.t * Typetexp.error

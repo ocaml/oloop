@@ -80,7 +80,7 @@ let eval ~msg_with_location ~silent_directives lexbuf =
                with _ -> "" in
      if not backtrace_enabled then Printexc.record_backtrace false;
      let err = match e with
-       | Lexer.Error(e, l) -> `Lexer(e, l)
+       | Lexer.Error(e, l) -> `Lexer(l, e)
        | Syntaxerr.Error e -> `Syntaxerr e
        | Typedecl.Error(l, e) ->
           `Typedecl(l, Oloop_types.serialize_typedecl_error e)
