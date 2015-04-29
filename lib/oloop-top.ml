@@ -3,7 +3,7 @@
    minimize conflicts when #load'ing modules. *)
 
 open Oloop_types
-open Oloop_top
+module Rule = Oloop_rule
 
 (* Force the linking of some modules for, say, #load "camlp4o.cma" *)
 module S___ = Stream

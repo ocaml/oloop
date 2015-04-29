@@ -14,6 +14,6 @@ META
 /app/app_conf.ml
 /lib/oloop_conf.ml
 /lib/oloop_ocaml.ml
-/lib/oloop_top.ml
+/lib/oloop_rule.ml
 /lib/oloop_types.ml
 /tests/example*.txt
