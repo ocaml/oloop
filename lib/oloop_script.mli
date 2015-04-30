@@ -58,3 +58,25 @@ val of_string : filename:string -> string -> t Or_error.t
     double semicolon at the end of a line. It is okay for the last
     phrase to not end with a double semicolon. *)
 val phrases_of_string : string -> string list
+
+(** Evaluated scripts. *)
+module Evaluated : sig
+
+  (** A phrase and its outcome. *)
+  type phrase = {
+    phrase : string;
+    outcome : Oloop_output.merged Oloop_outcome.t;
+  }
+
+  (** A part and all of its evaluated phrases. *)
+  type part = {
+    number : float;
+    content : string;
+    phrases : phrase list;
+  }
+
+  type t = part list
+
+  val to_plain_text : t -> string
+
+end

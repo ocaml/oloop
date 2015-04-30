@@ -78,6 +78,8 @@ val with_toploop :
 val eval : 'a t -> string -> 'a Outcome.t Deferred.t
 (** [eval t phrase] evaluates [phrase] in the toploop [t]. *)
 
+val eval_script : Script.t -> Script.Evaluated.t Or_error.t Deferred.t
+
 val eval_or_error :
   'a t -> string -> (Outcometree.out_phrase * 'a Output.t) Deferred.Or_error.t
 (** Same as {!eval} except that the [`Uneval] result is transformed

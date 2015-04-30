@@ -1,6 +1,8 @@
 open Core.Std
 open Oloop_core2
 open Async.Std
+module Outcome = Oloop_outcome
+module Output = Oloop_output
 
 type part = {
   number : float;
@@ -76,3 +78,48 @@ let of_string ~filename contents =
 let of_file filename =
   Reader.file_contents filename
   >>| of_string ~filename
+
+module Evaluated = struct
+
+  type phrase = {
+    phrase : string;
+    outcome : Oloop_output.merged Oloop_outcome.t;
+  }
+
+  type part = {
+    number : float;
+    content : string;
+    phrases : phrase list;
+  }
+
+  type t = part list
+
+  let to_plain_text t =
+    let buf = Buffer.create 2048 in
+    let add_string x = Buffer.add_string buf x in
+    let add_stringl x = Buffer.add_string buf x; Buffer.add_char buf '\n' in
+    List.iter t ~f:(fun {number; content=_; phrases} ->
+      add_string "(* part ";
+      add_string (Float.to_string_hum number ~strip_zero:true);
+      add_stringl " *)";
+      List.iter phrases ~f:(fun {phrase; outcome} ->
+        add_string "# "; add_stringl phrase;
+        (
+          match outcome with
+          | `Uneval (`Internal_error exn, msg) -> (
+            add_stringl (Exn.to_string exn);
+            add_stringl msg;
+          )
+          | `Uneval (#Outcome.invalid_phrase as x, msg) -> (
+            (* add_stringl *)
+            (*   (Outcome.sexp_of_invalid_phrase x |> Sexp.to_string_hum); *)
+            add_stringl msg;
+          )
+          | `Eval (out_phrase,output) ->
+            add_stringl (Output.stdout output)
+        )
+      )
+    );
+    Buffer.contents buf
+
+end

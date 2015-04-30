@@ -125,6 +125,32 @@ let eval (t: 'a t) phrase =
      return(`Uneval(`Internal_error End_of_file,
                          "The toploop did not return a result"))
 
+let eval_script script =
+  let eval_phrase oloop phrase : Script.Evaluated.phrase Deferred.t =
+    eval oloop phrase >>| fun outcome ->
+    {Script.Evaluated.phrase; outcome}
+  in
+  let eval_phrases oloop phrases : Script.Evaluated.phrase list Deferred.t =
+    Deferred.List.fold phrases ~init:[] ~f:(fun accum phrase ->
+      eval_phrase oloop phrase >>| fun x -> x::accum
+    )
+    >>| List.rev
+  in
+  let eval_part oloop part : Script.Evaluated.part Deferred.t =
+    let {Script.number; content} = part in
+    let phrases = Script.phrases_of_string content in
+    eval_phrases oloop phrases >>| fun phrases ->
+    {Script.Evaluated.number; content; phrases}
+  in
+  let parts = (script : Script.t :> Script.part list) in
+  with_toploop Output.merged ~f:(fun t ->
+    Deferred.List.fold parts ~init:[] ~f:(fun accum part ->
+      eval_part t part >>| fun x -> x::accum
+    )
+    >>| List.rev
+    >>| fun x -> Ok x
+  )
+
 let eval_or_error t phrase =
   eval t phrase >>| function
   | `Eval x -> Ok x
