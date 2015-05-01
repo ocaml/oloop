@@ -59,7 +59,8 @@ let eval ~msg_with_location ~silent_directives lexbuf =
       Location.input_lexbuf := Some lexbuf;
     let phrase = !Toploop.parse_toplevel_phrase lexbuf in
     let phrase = Rule.rewrite phrase in
-    ignore(Toploop.execute_phrase true Format.err_formatter phrase);
+    Env.reset_cache_toplevel ();
+    ignore(Toploop.execute_phrase true Format.str_formatter phrase);
     ignore(Format.flush_str_formatter ()); (* fill [out_phrase] *)
     match phrase with
     | Parsetree.Ptop_def _ -> Ok !out_phrase
