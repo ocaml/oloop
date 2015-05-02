@@ -19,13 +19,16 @@ let eval_phrases t =
            Format.printf "@?";
            Ok()
         | `Uneval(e, msg) ->
+           (match Oloop.Outcome.location_of_uneval e with
+            | Some l -> Location.print Format.std_formatter l
+            | None -> ());
            Format.printf "[36m%s[0m" msg;
            Oloop.Outcome.report_uneval Format.std_formatter e;
            Ok()
        )
 
 let () =
-  ignore(Oloop.with_toploop Oloop.Output.separate ~f:eval_phrases
+  ignore(Oloop.with_toploop Oloop.Output.merged ~f:eval_phrases
          >>| function
          | Ok _ -> shutdown 0
          | Error e -> eprintf "%s\n%!" (Error.to_string_hum e);
