@@ -78,6 +78,15 @@ Executable "error"
   BuildTools:     ocamlbuild
   Install:        false
 
+Executable "warning"
+  Path:           tests
+  Build$:         flag(tests)
+  MainIs:         test_warning.ml
+  BuildDepends:   oloop, async
+  CompiledObject: best
+  BuildTools:     ocamlbuild
+  Install:        false
+
 Executable "multiple"
   Path:           tests
   Build$:         flag(tests)
