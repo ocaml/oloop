@@ -17,6 +17,7 @@
     This has not been implemented.
 *)
 open Core_kernel.Std
+open Async.Std
 
 type 'a t
 (** Type representing the contents of stdout and stderr. *)
@@ -26,8 +27,6 @@ type merged   (** Stderr is redirected to stdout. *)
 
 val stdout : _ t -> string
 val stderr : separate t -> string
-val stdout_queue : _ t -> string Queue.t
-val stderr_queue : separate t -> string Queue.t
 
 type 'a kind
 (** Specify whether one wants separate stdout and stderr or not. *)
@@ -36,7 +35,7 @@ val separate : separate kind
 val merged : merged kind
 val kind : _ kind -> [`Separate | `Merged]
 
-val make_unsafe : stdout:(string Queue.t) -> stderr:(string Queue.t) -> _ t
+val make_unsafe : Process.t -> _ t Deferred.t
 (** It is unsafe because you can provide [stderr] even if you treat
     the result as a [merged t]. In this case, the [stderr] will be
     ignored when you ask for [stdout], which is probably not what

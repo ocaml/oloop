@@ -12,8 +12,6 @@ let default_toplevel =
 
 type 'a t = {
     proc: Process.t;
-    out: string Pipe.Reader.t;
-    err: string Pipe.Reader.t;
     sock_path: string; (* unix socket name *)
     sock: Reader.t;    (* socket for the outcome of eval *)
   }
@@ -62,9 +60,7 @@ let create ?(prog = !default_toplevel) ?(include_dirs=[]) ?init
   | `Ok(conn_sock, _) ->
      Unix.close (Socket.fd sock) >>= fun () ->
      let sock = Reader.create (Socket.fd conn_sock) in
-     let out = Reader.pipe (Process.stdout proc)
-     and err = Reader.pipe (Process.stderr proc) in
-     return(Result.Ok { proc;  out; err;  sock_path;  sock })
+     return(Result.Ok { proc;  sock_path;  sock })
   | `Socket_closed ->
      let msg = "Oloop.create: toplevel not started" in
      return(Result.Error(Error.of_string msg))
@@ -94,11 +90,6 @@ let with_toploop ?prog ?include_dirs ?init ?no_app_functors ?principal
                    >>= fun () -> return r
   | Result.Error _ as e -> return e
 
-let queue_of_pipe p =
-  match Pipe.read_now' p with
-  | `Eof | `Nothing_available -> Queue.create()
-  | `Ok q -> q
-
 let eval (t: 'a t) phrase =
   let top = Process.stdin t.proc in
   Writer.write top (Int.to_string (String.length phrase) ^ "\n");
@@ -109,10 +100,7 @@ let eval (t: 'a t) phrase =
   >>= fun () ->
   Reader.read_marshal t.sock
   >>= fun (out_phrase: Oloop_types.out_phrase_or_error Reader.Read_result.t) ->
-  let o = Output.make_unsafe
-            ~stdout:(queue_of_pipe t.out)
-            ~stderr:(queue_of_pipe t.err)
-  in
+  Output.make_unsafe t.proc >>= fun o ->
   match out_phrase with
   | `Ok(Oloop_types.Ok r) ->
      return(`Eval(Oloop_types.to_outcometree_phrase r, o))

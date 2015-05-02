@@ -301,3 +301,5 @@ type out_phrase_or_error =
 let send_out_phrase_or_error ch (o: out_phrase_or_error) =
   output_value ch o;
   flush ch
+
+let end_output = '\x04'

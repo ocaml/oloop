@@ -113,10 +113,13 @@ let main ~msg_with_location ~silent_directives ~redirect_stderr ~sock_name =
                (Lexing.from_string(phrase ^ ";;"))
       with e -> Error(`Internal_error e, "Exception raised during the \
                                          phrase evaluation") in
+    (* Sending a special ASCII char to indicate the end of the output
+       is not 100% robust but the alternative consisting of reading as
+       much as is available does not work well. *)
+    Format.pp_print_char Format.std_formatter end_output;
     Format.pp_print_flush Format.std_formatter ();
-    flush stdout;
+    Format.pp_print_char Format.err_formatter end_output;
     Format.pp_print_flush Format.err_formatter ();
-    flush stderr;
     (try send_out_phrase_or_error ch outcome
      with Invalid_argument msg as e ->
        (* The marshalling failed *)

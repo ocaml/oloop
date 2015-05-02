@@ -50,3 +50,5 @@ val send_out_phrase_or_error : out_channel -> out_phrase_or_error -> unit
 (** [send_out_phrase_or_error ch p] serialize and send the phrase or
     error [p] on the channel [ch].  The channel is flushed after. *)
 
+val end_output : char
+(** Char indicating the end of stdout and stderr for this command. *)

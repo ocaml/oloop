@@ -56,7 +56,9 @@ let report_uneval ?(msg_with_location=false) ppf e =
     (* The location of the error is reported because the terminal is
        detected as dumb.  Remove it "manually". *)
     let b = Buffer.create 64 in
-    Errors.report_error (Format.formatter_of_buffer b) exn;
+    let fmt = Format.formatter_of_buffer b in
+    Errors.report_error fmt exn;
+    Format.pp_print_flush fmt ();
     let len = Buffer.length b in
     let loc_present =
       Buffer.(len > 3 && nth b 0 = 'C' && nth b 1 = 'h' && nth b 2 = 'a') in
