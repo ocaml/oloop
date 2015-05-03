@@ -54,7 +54,9 @@ let create ?(prog = !default_toplevel) ?(include_dirs=[]) ?init
   let args = match Output.kind output_merged with
     | `Merged -> "--redirect-stderr" :: args
     | `Separate -> args in
-  Process.create ~prog ~args () >>=? fun proc ->
+  (* Make sure that the input phrase is not reprinted: *)
+  let env = ["TERM", "norepeat"] in
+  Process.create ~prog ~args ~env:(`Extend env) () >>=? fun proc ->
   (* Wait for the oloop-top client to connect: *)
   Socket.accept (Socket.listen sock) >>= function
   | `Ok(conn_sock, _) ->

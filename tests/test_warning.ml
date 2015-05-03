@@ -4,8 +4,10 @@ open Async.Std
 let phrases = [
     "let f ?(x=1) = x";
     "let g ?(x=1) = x";
-    "let v = 1";
-    "let w = 1";
+    "let f ?(x=1) = \"\\e\" ";
+    "let h =
+       Printf.eprintf \"Hello\";
+       fun ?(x=1) -> x";
   ]
 
 let eval_phrases t =
@@ -31,6 +33,7 @@ let eval_phrases t =
 
 let () =
   ignore(Oloop.with_toploop Oloop.Output.separate ~f:eval_phrases
+                            ~msg_with_location:()
          >>| function
          | Ok _ -> shutdown 0
          | Error e -> eprintf "%s\n%!" (Error.to_string_hum e);

@@ -52,11 +52,23 @@ let () =
   := fun _fmt phrase ->
      out_phrase := Oloop_types.of_outcometree_phrase phrase
 
+let rec is_prefix_loop pre s i len_pre =
+  i >= len_pre || (pre.[i] = s.[i] && is_prefix_loop pre s (i + 1) len_pre)
+
+let is_prefix pre s =
+  if String.length pre > String.length s then false
+  else is_prefix_loop pre s 0 (String.length pre)
+
+let remove_location s =
+  if is_prefix "Characters " s then (
+    let i = String.index s '\n' + 1 in
+    String.sub s i (String.length s - i)
+  )
+  else s
+
 let eval ~msg_with_location ~silent_directives lexbuf =
   try
     Location.init lexbuf "//toplevel//";
-    if not msg_with_location then
-      Location.input_lexbuf := Some lexbuf;
     let phrase = !Toploop.parse_toplevel_phrase lexbuf in
     let phrase = Rule.rewrite phrase in
     Env.reset_cache_toplevel ();
@@ -90,6 +102,7 @@ let eval ~msg_with_location ~silent_directives lexbuf =
        | Symtable.Error e -> `Symtable e
        (* FIXME: add more *)
        | _ -> `Internal_error e in
+     let msg = if msg_with_location then msg else remove_location msg in
      Error(err, msg)
 
 
