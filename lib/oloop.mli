@@ -76,7 +76,7 @@ val with_toploop : (
 val eval : 'a t -> string -> 'a Outcome.t Deferred.t
 (** [eval t phrase] evaluates [phrase] in the toploop [t]. *)
 
-val eval_script : Script.t -> Script.Evaluated.t Or_error.t Deferred.t
+val eval_script : (Script.t -> Script.Evaluated.t Or_error.t Deferred.t) args
 
 val eval_or_error :
   'a t -> string -> 'a Outcome.eval Deferred.Or_error.t
