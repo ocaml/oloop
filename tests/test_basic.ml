@@ -5,12 +5,12 @@ open Format
 let eval t phrase =
   printf "phrase: %S\n%!" phrase;
   Oloop.eval t phrase >>| function
-  | `Eval(out_phrase, o) ->
+  | `Eval e ->
      let b = Buffer.create 1024 in
-     !Oprint.out_phrase (formatter_of_buffer b) out_phrase;
+     !Oprint.out_phrase (formatter_of_buffer b) (Oloop.Outcome.result e);
      printf "OUTCOME: [%s]\n%!" (Buffer.contents b);
-     printf "OUT: %S\nERR: %S\n%!" (Oloop.Output.stdout o)
-                                   (Oloop.Output.stderr o)
+     printf "OUT: %S\nERR: %S\n%!" (Oloop.Output.stdout (Oloop.Outcome.out e))
+                                   (Oloop.Output.stderr (Oloop.Outcome.out e))
      (* printf "OUT+ERR: %S\n" (Oloop.Output.stdout o) *)
   | `Uneval(e, msg) ->
      printf "ERROR: {|%s|}\n" msg;

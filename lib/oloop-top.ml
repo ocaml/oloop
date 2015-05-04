@@ -74,15 +74,17 @@ let eval ~msg_with_location ~silent_directives lexbuf =
     Env.reset_cache_toplevel ();
     ignore(Toploop.execute_phrase true Format.str_formatter phrase);
     ignore(Format.flush_str_formatter ()); (* fill [out_phrase] *)
+    let warnings = [] in (* for future compilers *)
     match phrase with
-    | Parsetree.Ptop_def _ -> Ok !out_phrase
+    | Parsetree.Ptop_def _ -> Ok(!out_phrase, warnings)
     | Parsetree.Ptop_dir _ ->
        (* Only silence the output if everything is fine. *)
        if silent_directives then
-         Ok(match !out_phrase with
+         let out_phrase = match !out_phrase with
             | Oloop_types.Exception _ -> !out_phrase
-            | Eval _ | Signature _ -> Oloop_types.empty)
-       else Ok !out_phrase
+            | Eval _ | Signature _ -> Oloop_types.empty in
+         Ok(out_phrase, warnings)
+       else Ok(!out_phrase, warnings)
   with
   | End_of_file -> exit 0
   | e ->

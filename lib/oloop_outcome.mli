@@ -23,6 +23,14 @@
 *)
 open Core_kernel.Std
 
+(** The result of a successful evaluation of a phrase. *)
+type 'a eval
+
+val result : _ eval -> Outcometree.out_phrase
+val out : 'a eval -> 'a Oloop_output.t
+val warnings : _ eval -> (Location.t * Warnings.t) list
+
+(** List of possible errors when evaluating a phrase. *)
 type invalid_phrase = [
 | `Lexer of Location.t * Lexer.error
 | `Syntaxerr of Syntaxerr.error
@@ -37,12 +45,11 @@ type uneval = [
 | `Internal_error of Exn.t
 ]
 
+(** The outcome of evaluating a phrase. *)
 type 'a t = [
-| `Eval of Outcometree.out_phrase * 'a Oloop_output.t
+| `Eval of 'a eval
 | `Uneval of uneval * string
 ]
-
-val deserialize_to_uneval : Oloop_types.serializable_error -> uneval
 
 val location_of_uneval : uneval -> Location.t option
 (** [location_of_uneval e] returns the error location if any is present. *)
@@ -58,3 +65,12 @@ val uneval_to_error : uneval * string -> Error.t
     of Oloop, this may or may not be correct. Perhaps you are trying
     to demonstrate a syntax error, in which case getting an [uneval]
     is not wrong. *)
+
+
+(**/**)
+
+val make_eval : result: Outcometree.out_phrase ->
+                out: 'a Oloop_output.t ->
+                warnings: (Location.t * Warnings.t) list -> 'a eval
+
+val deserialize_to_uneval : Oloop_types.serializable_error -> uneval

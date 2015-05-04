@@ -295,7 +295,7 @@ type serializable_error =
       The string is the explanation the toplevel would display
       (or an explanation of the error in case of [`Internal_error]). *)
 type out_phrase_or_error =
-  | Ok of serializable_out_phrase
+  | Ok of serializable_out_phrase * (Location.t * Warnings.t) list
   | Error of (serializable_error * string)
 
 let send_out_phrase_or_error ch (o: out_phrase_or_error) =

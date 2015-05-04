@@ -14,8 +14,8 @@ let eval_phrases t =
     ~f:(fun phrase ->
         Format.printf "# [32m%s[0m;;@\n%!" phrase;
         Oloop.eval t phrase >>| function
-        | `Eval(out_phrase, _) ->
-           !Oprint.out_phrase Format.std_formatter out_phrase;
+        | `Eval e ->
+           !Oprint.out_phrase Format.std_formatter (Oloop.Outcome.result e);
            Format.printf "@?";
            Ok()
         | `Uneval(e, msg) ->

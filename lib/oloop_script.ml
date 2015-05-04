@@ -115,8 +115,8 @@ module Evaluated = struct
             (*   (Outcome.sexp_of_invalid_phrase x |> Sexp.to_string_hum); *)
             add_stringl msg;
           )
-          | `Eval (out_phrase,output) ->
-            add_stringl (Output.stdout output)
+          | `Eval e ->
+            add_stringl (Output.stdout(Outcome.out e))
         )
       )
     );

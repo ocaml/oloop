@@ -16,11 +16,12 @@ let eval_phrases t =
     ~f:(fun phrase ->
         Format.printf "# [32m%s[0m;;@\n%!" phrase;
         Oloop.eval t phrase >>| function
-        | `Eval(out_phrase, o) ->
-           !Oprint.out_phrase Format.std_formatter out_phrase;
+        | `Eval e ->
+           !Oprint.out_phrase Format.std_formatter (Oloop.Outcome.result e);
            Format.printf "@?";
            Format.printf "OUT: %S\nERR: %S\n%!"
-                         (Oloop.Output.stdout o) (Oloop.Output.stderr o);
+                         (Oloop.Output.stdout (Oloop.Outcome.out e))
+                         (Oloop.Output.stderr (Oloop.Outcome.out e));
            Ok()
         | `Uneval(e, msg) ->
            (match Oloop.Outcome.location_of_uneval e with

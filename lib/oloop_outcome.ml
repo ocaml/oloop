@@ -1,5 +1,17 @@
 open Core_kernel.Std
 
+type 'a eval = {
+    result: Outcometree.out_phrase;
+    out: 'a Oloop_output.t;
+    warnings: (Location.t * Warnings.t) list
+  }
+
+let result e = e.result
+let out e = e.out
+let warnings e = e.warnings
+
+let make_eval ~result ~out ~warnings = { result; out; warnings }
+
 (* Same as Oloop_types.error but with SEXP convertion. *)
 type invalid_phrase = [
 | `Lexer of Oloop_ocaml.Location.t * Oloop_ocaml.Lexer.error
@@ -18,7 +30,7 @@ type uneval = [
 ]
 
 type 'a t = [
-| `Eval of Outcometree.out_phrase * 'a Oloop_output.t
+| `Eval of 'a eval
 | `Uneval of uneval * string
 ]
 

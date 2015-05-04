@@ -104,8 +104,10 @@ let eval (t: 'a t) phrase =
   >>= fun (out_phrase: Oloop_types.out_phrase_or_error Reader.Read_result.t) ->
   Output.make_unsafe t.proc >>= fun o ->
   match out_phrase with
-  | `Ok(Oloop_types.Ok r) ->
-     return(`Eval(Oloop_types.to_outcometree_phrase r, o))
+  | `Ok(Oloop_types.Ok(r, warnings)) ->
+     (* TODO: Parse stderr for warnings *)
+     let result = Oloop_types.to_outcometree_phrase r in
+     return(`Eval(Outcome.make_eval ~result ~out:o ~warnings))
   | `Ok(Oloop_types.Error(e, msg)) ->
      (* When the code was not correclty evaluated, the [phrase] is
         outputted on stdout with terminal codes to underline the error
