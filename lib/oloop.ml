@@ -24,6 +24,7 @@ type 'a ocaml_args =
   ?rectypes: unit ->
   ?short_paths: unit ->
   ?strict_sequence: unit ->
+  ?thread: unit ->
   'a
 
 type 'a args = (
@@ -40,7 +41,7 @@ let present = function
   | None -> false
 
 let create ?(include_dirs=[]) ?init ?no_app_functors ?principal
-           ?rectypes ?short_paths ?strict_sequence
+           ?rectypes ?short_paths ?strict_sequence ?thread
            ?(prog = !default_toplevel) ?msg_with_location
            ?silent_directives ?determine_deferred ?determine_lwt
            output_merged =
@@ -61,6 +62,8 @@ let create ?(include_dirs=[]) ?init ?no_app_functors ?principal
   let args = if present rectypes then "--rectypes" :: args else args in
   let args = if present short_paths then "--short-paths" :: args else args in
   let args = if present strict_sequence then "--strict-sequence" :: args
+             else args in
+  let args = if present thread then "--thread" :: args
              else args in
   let args = if present msg_with_location then "--msg-with-location" :: args
              else args in
@@ -97,12 +100,12 @@ let close t =
   Unix.unlink t.sock_path
 
 let with_toploop ?include_dirs ?init ?no_app_functors ?principal
-                 ?rectypes ?short_paths ?strict_sequence
+                 ?rectypes ?short_paths ?strict_sequence ?thread
                  ?prog ?msg_with_location
                  ?silent_directives ?determine_deferred ?determine_lwt
                  output_merged ~f =
   create ?prog ?include_dirs ?init ?no_app_functors ?principal
-         ?rectypes ?short_paths ?strict_sequence ?msg_with_location
+         ?rectypes ?short_paths ?strict_sequence ?thread ?msg_with_location
          ?silent_directives ?determine_deferred ?determine_lwt
          output_merged
   >>= function
@@ -138,7 +141,7 @@ let eval (t: 'a t) phrase =
                          "The toploop did not return a result"))
 
 let eval_script ?include_dirs ?init ?no_app_functors ?principal
-                ?rectypes ?short_paths ?strict_sequence
+                ?rectypes ?short_paths ?strict_sequence ?thread
                 ?prog ?msg_with_location
                 ?silent_directives ?determine_deferred ?determine_lwt
                 script =
@@ -160,7 +163,7 @@ let eval_script ?include_dirs ?init ?no_app_functors ?principal
   in
   let parts = (script : Script.t :> Script.part list) in
   with_toploop ?include_dirs ?init ?no_app_functors ?principal
-               ?rectypes ?short_paths ?strict_sequence
+               ?rectypes ?short_paths ?strict_sequence ?thread
                ?prog ?msg_with_location
                ?silent_directives ?determine_deferred ?determine_lwt
                Output.merged ~f:(fun t ->

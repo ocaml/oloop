@@ -167,6 +167,8 @@ let () =
        " Shorten paths in types");
       ("--strict-sequence", Arg.Set Clflags.strict_sequence,
        " Left-hand part of a sequence must have type unit");
+      ("--thread", Arg.Set Clflags.use_threads,
+       " Generate code that supports the system threads library");
       ("--msg-with-location", Arg.Set msg_with_location,
        " Add the source location to error messages");
       ("--silent-directives", Arg.Set silent_directives,

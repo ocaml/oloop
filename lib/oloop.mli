@@ -22,6 +22,7 @@ type 'a ocaml_args =
   ?rectypes: unit ->
   ?short_paths: unit ->
   ?strict_sequence: unit ->
+  ?thread: unit ->
   'a
 
 type 'a args = (

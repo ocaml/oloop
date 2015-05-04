@@ -24,6 +24,9 @@ let main = Command.async
     +> map ~f:bool_to_unit
        (flag "-strict-sequence" no_arg
           ~doc:" Left-hand part of a sequence must have type unit")
+    +> map ~f:bool_to_unit
+       (flag "-thread" no_arg
+          ~doc:" Generate code that supports the system threads library")
     +> flag "-prog" (optional string)
        ~doc:"<path> Full <path> to specially customized toploop"
     +> map ~f:bool_to_unit
@@ -41,13 +44,13 @@ let main = Command.async
     +> anon ("script" %: file)
   )
   (fun include_dirs init no_app_functors principal rectypes
-       short_paths strict_sequence
+       short_paths strict_sequence thread
        prog msg_with_location silent_directives
        determine_deferred determine_lwt
        file () ->
     Script.of_file file
     >>=? eval_script ?include_dirs ?init ?no_app_functors ?principal ?rectypes
-                     ?short_paths ?strict_sequence
+                     ?short_paths ?strict_sequence ?thread
                      ?prog ?msg_with_location ?silent_directives
                      ?determine_deferred ?determine_lwt
     >>|? Script.Evaluated.to_plain_text
