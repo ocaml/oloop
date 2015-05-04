@@ -14,19 +14,26 @@ module Outcome : module type of Oloop_outcome
 type 'a t
 (** A handle to a toploop. *)
 
-val create : ?prog: string ->
-             ?include_dirs: string list ->
-             ?init: string ->
-             ?no_app_functors: unit ->
-             ?principal: unit ->
-             ?rectypes: unit ->
-             ?short_paths: unit ->
-             ?strict_sequence: unit ->
-             ?msg_with_location: unit ->
-             ?silent_directives: unit ->
-             ?determine_deferred: unit ->
-             ?determine_lwt: unit ->
-             'a Output.kind -> 'a t Or_error.t Deferred.t
+type 'a ocaml_args =
+  ?include_dirs: string list ->
+  ?init: string ->
+  ?no_app_functors: unit ->
+  ?principal: unit ->
+  ?rectypes: unit ->
+  ?short_paths: unit ->
+  ?strict_sequence: unit ->
+  'a
+
+type 'a args = (
+  ?prog: string ->
+  ?msg_with_location: unit ->
+  ?silent_directives: unit ->
+  ?determine_deferred: unit ->
+  ?determine_lwt: unit ->
+  'a
+) ocaml_args
+
+val create : ('a Output.kind -> 'a t Or_error.t Deferred.t) args
 (** Create a new toploop.
 
     The optional arguments [include_dirs] (-I), [init],
@@ -56,20 +63,11 @@ val create : ?prog: string ->
 val close : _ t -> unit Deferred.t
 (** Terminates the toplevel. *)
 
-val with_toploop :
-  ?prog: string ->
-  ?include_dirs: string list ->
-  ?init: string ->
-  ?no_app_functors: unit ->
-  ?principal: unit ->
-  ?rectypes: unit ->
-  ?short_paths: unit ->
-  ?strict_sequence: unit ->
-  ?msg_with_location: unit ->
-  ?silent_directives: unit ->
-  ?determine_deferred: unit ->
-  ?determine_lwt: unit ->
-  'a Output.kind -> f:('a t -> 'b Deferred.Or_error.t) -> 'b Deferred.Or_error.t
+val with_toploop : (
+  'a Output.kind ->
+  f:('a t -> 'b Deferred.Or_error.t) ->
+  'b Deferred.Or_error.t
+) args
 (** [with_toploop kind f] will run [f], closing the toploop and
     freeing its resources whether [f] returns a result or an error.
     This is convenient in order use to the bind operator [>>=?] to

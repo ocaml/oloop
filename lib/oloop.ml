@@ -16,14 +16,33 @@ type 'a t = {
     sock: Reader.t;    (* socket for the outcome of eval *)
   }
 
+type 'a ocaml_args =
+  ?include_dirs: string list ->
+  ?init: string ->
+  ?no_app_functors: unit ->
+  ?principal: unit ->
+  ?rectypes: unit ->
+  ?short_paths: unit ->
+  ?strict_sequence: unit ->
+  'a
+
+type 'a args = (
+  ?prog: string ->
+  ?msg_with_location: unit ->
+  ?silent_directives: unit ->
+  ?determine_deferred: unit ->
+  ?determine_lwt: unit ->
+  'a
+) ocaml_args
+
 let present = function
   | Some () -> true
   | None -> false
 
-let create ?(prog = !default_toplevel) ?(include_dirs=[]) ?init
-           ?no_app_functors ?principal ?rectypes ?short_paths
-           ?strict_sequence ?msg_with_location ?silent_directives
-           ?determine_deferred ?determine_lwt
+let create ?(include_dirs=[]) ?init ?no_app_functors ?principal
+           ?rectypes ?short_paths ?strict_sequence
+           ?(prog = !default_toplevel) ?msg_with_location
+           ?silent_directives ?determine_deferred ?determine_lwt
            output_merged =
   let sock_path = Filename.temp_file "oloop" ".fifo" in
   Unix.unlink sock_path >>= fun () ->
@@ -77,8 +96,9 @@ let close t =
   Reader.close t.sock >>= fun () ->
   Unix.unlink t.sock_path
 
-let with_toploop ?prog ?include_dirs ?init ?no_app_functors ?principal
-                 ?rectypes ?short_paths ?strict_sequence ?msg_with_location
+let with_toploop ?include_dirs ?init ?no_app_functors ?principal
+                 ?rectypes ?short_paths ?strict_sequence
+                 ?prog ?msg_with_location
                  ?silent_directives ?determine_deferred ?determine_lwt
                  output_merged ~f =
   create ?prog ?include_dirs ?init ?no_app_functors ?principal
