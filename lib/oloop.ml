@@ -14,6 +14,7 @@ type 'a t = {
     proc: Process.t;
     sock_path: string; (* unix socket name *)
     sock: Reader.t;    (* socket for the outcome of eval *)
+    silent_directives: bool;
   }
 
 type 'a ocaml_args =
@@ -67,8 +68,6 @@ let create ?(include_dirs=[]) ?init ?no_app_functors ?principal
              else args in
   let args = if present msg_with_location then "--msg-with-location" :: args
              else args in
-  let args = if present silent_directives then "--silent-directives" :: args
-             else args in
   let args = if present determine_deferred then "--determine-deferred" :: args
              else args in
   let args = if present determine_lwt then "--determine-lwt" :: args
@@ -84,7 +83,8 @@ let create ?(include_dirs=[]) ?init ?no_app_functors ?principal
   | `Ok(conn_sock, _) ->
      Unix.close (Socket.fd sock) >>= fun () ->
      let sock = Reader.create (Socket.fd conn_sock) in
-     return(Result.Ok { proc;  sock_path;  sock })
+     return(Result.Ok { proc;  sock_path;  sock;
+                        silent_directives = present silent_directives })
   | `Socket_closed ->
      let msg = "Oloop.create: toplevel not started" in
      return(Result.Error(Error.of_string msg))
@@ -127,9 +127,16 @@ let eval (t: 'a t) phrase =
   >>= fun (out_phrase: Oloop_types.out_phrase_or_error Reader.Read_result.t) ->
   Output.make_unsafe t.proc >>= fun o ->
   match out_phrase with
-  | `Ok(Oloop_types.Ok(r, warnings)) ->
+  | `Ok(Oloop_types.Ok(r, is_directive, warnings)) ->
      (* TODO: Parse stderr for warnings *)
-     let result = Oloop_types.to_outcometree_phrase r in
+     let out_phrase = Oloop_types.to_outcometree_phrase r in
+     let result =
+       if is_directive && t.silent_directives then
+         (* Only silence the output if everything is fine. *)
+         match out_phrase with
+         | Outcometree.Ophr_exception _ -> out_phrase
+         | Ophr_eval _ | Ophr_signature _ -> Outcometree.Ophr_signature []
+       else out_phrase in
      return(`Eval(Outcome.make_eval ~result ~out:o ~warnings))
   | `Ok(Oloop_types.Error(e, msg)) ->
      (* When the code was not correclty evaluated, the [phrase] is

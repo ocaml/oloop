@@ -66,7 +66,7 @@ let remove_location s =
   )
   else s
 
-let eval ~msg_with_location ~silent_directives lexbuf =
+let eval ~msg_with_location lexbuf =
   try
     Location.init lexbuf "//toplevel//";
     let phrase = !Toploop.parse_toplevel_phrase lexbuf in
@@ -75,16 +75,10 @@ let eval ~msg_with_location ~silent_directives lexbuf =
     ignore(Toploop.execute_phrase true Format.str_formatter phrase);
     ignore(Format.flush_str_formatter ()); (* fill [out_phrase] *)
     let warnings = [] in (* for future compilers *)
-    match phrase with
-    | Parsetree.Ptop_def _ -> Ok(!out_phrase, warnings)
-    | Parsetree.Ptop_dir _ ->
-       (* Only silence the output if everything is fine. *)
-       if silent_directives then
-         let out_phrase = match !out_phrase with
-            | Oloop_types.Exception _ -> !out_phrase
-            | Eval _ | Signature _ -> Oloop_types.empty in
-         Ok(out_phrase, warnings)
-       else Ok(!out_phrase, warnings)
+    let is_directive = match phrase with
+      | Parsetree.Ptop_def _ -> false
+      | Parsetree.Ptop_dir _ -> true in
+    Ok(!out_phrase, is_directive, warnings)
   with
   | End_of_file -> exit 0
   | e ->
@@ -114,7 +108,7 @@ let read_phrase_exn ch =
   really_input ch phrase 0 len;
   phrase
 
-let main ~msg_with_location ~silent_directives ~redirect_stderr ~sock_name =
+let main ~msg_with_location ~redirect_stderr ~sock_name =
   initialize_toplevel ~redirect_stderr;
   let ch = (* or exn *)
     let fd = Unix.socket Unix.PF_UNIX Unix.SOCK_STREAM 0 in
@@ -124,8 +118,7 @@ let main ~msg_with_location ~silent_directives ~redirect_stderr ~sock_name =
     Location.reset();
     let outcome =
       try let phrase = read_phrase_exn stdin in
-          eval ~msg_with_location ~silent_directives
-               (Lexing.from_string(phrase ^ ";;"))
+          eval ~msg_with_location (Lexing.from_string(phrase ^ ";;"))
       with e -> Error(`Internal_error e, "Exception raised during the \
                                          phrase evaluation") in
     (* Sending a special ASCII char to indicate the end of the output
@@ -146,7 +139,6 @@ let main ~msg_with_location ~silent_directives ~redirect_stderr ~sock_name =
 let () =
   let sock_name = ref "" in
   let msg_with_location = ref false in
-  let silent_directives = ref false in
   let redirect_stderr = ref false in
   (* These options must correspond to optional arguments in [Oloop.create]. *)
   let specs = [
@@ -171,8 +163,6 @@ let () =
        " Generate code that supports the system threads library");
       ("--msg-with-location", Arg.Set msg_with_location,
        " Add the source location to error messages");
-      ("--silent-directives", Arg.Set silent_directives,
-       " Make all toploop directives return an empty structure");
       ("--redirect-stderr", Arg.Set redirect_stderr,
        " Redirect stderr to stdout");
       ("--determine-deferred", Arg.Unit(fun () -> Rule.(enable async)),
@@ -184,6 +174,5 @@ let () =
   let anon_fun _ = raise(Arg.Bad "No anomymous argument") in
   Arg.parse specs anon_fun "oloop-top [options]";
   main ~msg_with_location:!msg_with_location
-       ~silent_directives:!silent_directives
        ~redirect_stderr:!redirect_stderr
        ~sock_name:!sock_name

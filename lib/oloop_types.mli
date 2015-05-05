@@ -43,7 +43,7 @@ val deserialize_typedecl_error :
   Typedecl.error
 
 type out_phrase_or_error =
-  | Ok of serializable_out_phrase * (Location.t * Warnings.t) list
+  | Ok of serializable_out_phrase * bool * (Location.t * Warnings.t) list
   | Error of (serializable_error * string)
 
 val send_out_phrase_or_error : out_channel -> out_phrase_or_error -> unit
