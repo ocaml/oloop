@@ -48,9 +48,9 @@ val create : ('a Output.kind -> 'a t Or_error.t Deferred.t) args
     be used to highlight the problematic part of the phrase.
 
     @param silent_directives if set, the toplevel directives (existing
-    ones or new ones) will return an empty structure — thus
-    [Oprint.out_phrase] will print nothing — unless they raise an
-    exception.
+    ones or new ones), unless they raise an exception, will return an
+    empty structure — thus [Oprint.out_phrase] will print nothing —
+    and their output will be discarded.
 
     @param determine_deferred Automatically determine anonymous
     [Deferred.t] values as Utop does.

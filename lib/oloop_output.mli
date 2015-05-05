@@ -40,3 +40,5 @@ val make_unsafe : Process.t -> _ t Deferred.t
     the result as a [merged t]. In this case, the [stderr] will be
     ignored when you ask for [stdout], which is probably not what
     you expect. *)
+
+val empty : unit -> _ t

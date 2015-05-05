@@ -130,14 +130,16 @@ let eval (t: 'a t) phrase =
   | `Ok(Oloop_types.Ok(r, is_directive, warnings)) ->
      (* TODO: Parse stderr for warnings *)
      let out_phrase = Oloop_types.to_outcometree_phrase r in
-     let result =
+     let result, out =
        if is_directive && t.silent_directives then
          (* Only silence the output if everything is fine. *)
          match out_phrase with
-         | Outcometree.Ophr_exception _ -> out_phrase
-         | Ophr_eval _ | Ophr_signature _ -> Outcometree.Ophr_signature []
-       else out_phrase in
-     return(`Eval(Outcome.make_eval ~result ~out:o ~warnings))
+         | Outcometree.Ophr_exception _ -> (out_phrase, o)
+         | Ophr_eval _
+         | Ophr_signature _ ->
+            (Outcometree.Ophr_signature [], Output.empty())
+       else (out_phrase, o) in
+     return(`Eval(Outcome.make_eval ~result ~out ~warnings))
   | `Ok(Oloop_types.Error(e, msg)) ->
      (* When the code was not correclty evaluated, the [phrase] is
         outputted on stdout with terminal codes to underline the error

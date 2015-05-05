@@ -19,6 +19,8 @@ let make_unsafe proc =
   reader_to_string (Process.stderr proc) >>= fun stderr ->
   return { stdout;  stderr }
 
+let empty() = { stdout = "";  stderr = "" }
+
 let separate = false
 let merged = true
 let kind x = if x then `Merged else `Separate
