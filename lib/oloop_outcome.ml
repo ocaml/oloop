@@ -1,16 +1,31 @@
 open Core_kernel.Std
 
+type separate
+type merged
+(* FIXME: One can imagine a 3rd possibility [interleaved], in which no
+   information is lost. This would provide a sequence of content in
+   the order printed out, and tagged as being to stdout or to stderr.
+   This has not been implemented.  *)
+
+type 'a kind = bool
+let separate = false
+let merged = true
+let kind x = if x then `Merged else `Separate
+
 type 'a eval = {
     result: Outcometree.out_phrase;
-    out: 'a Oloop_output.t;
+    stdout: string;
+    stderr: string;
     warnings: (Location.t * Warnings.t) list
   }
 
 let result e = e.result
-let out e = e.out
+let stdout t = t.stdout
+let stderr t = t.stderr
 let warnings e = e.warnings
 
-let make_eval ~result ~out ~warnings = { result; out; warnings }
+let make_eval ~result ~stdout ~stderr ~warnings _ =
+  { result; stdout; stderr; warnings }
 
 (* Same as Oloop_types.error but with SEXP convertion. *)
 type invalid_phrase = [

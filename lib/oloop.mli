@@ -3,12 +3,6 @@ open Async_kernel.Std
 
 module Script : module type of Oloop_script
 
-module Output : module type of Oloop_output
-  with type 'a t = 'a Oloop_output.t
-  with type separate = Oloop_output.separate
-  with type merged = Oloop_output.merged
-  with type 'a kind = 'a Oloop_output.kind
-
 module Outcome : module type of Oloop_outcome
 
 type 'a t
@@ -34,7 +28,7 @@ type 'a args = (
   'a
 ) ocaml_args
 
-val create : ('a Output.kind -> 'a t Or_error.t Deferred.t) args
+val create : ('a Outcome.kind -> 'a t Or_error.t Deferred.t) args
 (** Create a new toploop.
 
     The optional arguments [include_dirs] (-I), [init],
@@ -65,7 +59,7 @@ val close : _ t -> unit Deferred.t
 (** Terminates the toplevel. *)
 
 val with_toploop : (
-  'a Output.kind ->
+  'a Outcome.kind ->
   f:('a t -> 'b Deferred.Or_error.t) ->
   'b Deferred.Or_error.t
 ) args

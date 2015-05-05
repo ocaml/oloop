@@ -2,7 +2,6 @@ open Core_kernel.Std
 open Async.Std
 
 module Script = Oloop_script
-module Output = Oloop_output
 module Outcome = Oloop_outcome
 
 let default_toplevel =
@@ -15,6 +14,7 @@ type 'a t = {
     sock_path: string; (* unix socket name *)
     sock: Reader.t;    (* socket for the outcome of eval *)
     silent_directives: bool;
+    kind: 'a Outcome.kind;
   }
 
 type 'a ocaml_args =
@@ -72,7 +72,7 @@ let create ?(include_dirs=[]) ?init ?no_app_functors ?principal
              else args in
   let args = if present determine_lwt then "--determine-lwt" :: args
              else args in
-  let args = match Output.kind output_merged with
+  let args = match Outcome.kind output_merged with
     | `Merged -> "--redirect-stderr" :: args
     | `Separate -> args in
   (* Make sure that the input phrase is not reprinted: *)
@@ -84,7 +84,8 @@ let create ?(include_dirs=[]) ?init ?no_app_functors ?principal
      Unix.close (Socket.fd sock) >>= fun () ->
      let sock = Reader.create (Socket.fd conn_sock) in
      return(Result.Ok { proc;  sock_path;  sock;
-                        silent_directives = present silent_directives })
+                        silent_directives = present silent_directives;
+                        kind = output_merged })
   | `Socket_closed ->
      let msg = "Oloop.create: toplevel not started" in
      return(Result.Error(Error.of_string msg))
@@ -115,6 +116,14 @@ let with_toploop ?include_dirs ?init ?no_app_functors ?principal
                    >>= fun () -> return r
   | Result.Error _ as e -> return e
 
+
+let reader_to_string r =
+  Reader.read_until r (`Char Oloop_types.end_output) ~keep_delim:false
+  >>| function
+  | `Eof -> ""
+  | `Eof_without_delim s -> s
+  | `Ok s -> s
+
 let eval (t: 'a t) phrase =
   let top = Process.stdin t.proc in
   Writer.write top (Int.to_string (String.length phrase) ^ "\n");
@@ -125,21 +134,22 @@ let eval (t: 'a t) phrase =
   >>= fun () ->
   Reader.read_marshal t.sock
   >>= fun (out_phrase: Oloop_types.out_phrase_or_error Reader.Read_result.t) ->
-  Output.make_unsafe t.proc >>= fun o ->
+  reader_to_string (Process.stdout t.proc) >>= fun stdout ->
+  reader_to_string (Process.stderr t.proc) >>= fun stderr ->
   match out_phrase with
   | `Ok(Oloop_types.Ok(r, is_directive, warnings)) ->
      (* TODO: Parse stderr for warnings *)
      let out_phrase = Oloop_types.to_outcometree_phrase r in
-     let result, out =
+     let result, stdout, stderr =
        if is_directive && t.silent_directives then
          (* Only silence the output if everything is fine. *)
          match out_phrase with
-         | Outcometree.Ophr_exception _ -> (out_phrase, o)
-         | Ophr_eval _
-         | Ophr_signature _ ->
-            (Outcometree.Ophr_signature [], Output.empty())
-       else (out_phrase, o) in
-     return(`Eval(Outcome.make_eval ~result ~out ~warnings))
+         | Outcometree.Ophr_exception _ -> (out_phrase, stdout, stderr)
+         | Outcometree.Ophr_eval _
+         | Outcometree.Ophr_signature _ ->
+            (Outcometree.Ophr_signature [], "", "")
+       else (out_phrase, stdout, stderr) in
+     return(`Eval(Outcome.make_eval ~result ~stdout ~stderr ~warnings t.kind))
   | `Ok(Oloop_types.Error(e, msg)) ->
      (* When the code was not correclty evaluated, the [phrase] is
         outputted on stdout with terminal codes to underline the error
@@ -175,7 +185,7 @@ let eval_script ?include_dirs ?init ?no_app_functors ?principal
                ?rectypes ?short_paths ?strict_sequence ?thread
                ?prog ?msg_with_location
                ?silent_directives ?determine_deferred ?determine_lwt
-               Output.merged ~f:(fun t ->
+               Outcome.merged ~f:(fun t ->
     Deferred.List.fold parts ~init:[] ~f:(fun accum part ->
       eval_part t part >>| fun x -> x::accum
     )

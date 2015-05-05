@@ -65,7 +65,7 @@ module Evaluated : sig
   (** A phrase and its outcome. *)
   type phrase = {
     phrase : string;
-    outcome : Oloop_output.merged Oloop_outcome.t;
+    outcome : Oloop_outcome.merged Oloop_outcome.t;
   }
 
   (** A part and all of its evaluated phrases. *)

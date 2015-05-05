@@ -2,7 +2,6 @@ open Core.Std
 open Oloop_core2
 open Async.Std
 module Outcome = Oloop_outcome
-module Output = Oloop_output
 
 type part = {
   number : float;
@@ -83,7 +82,7 @@ module Evaluated = struct
 
   type phrase = {
     phrase : string;
-    outcome : Oloop_output.merged Oloop_outcome.t;
+    outcome : Oloop_outcome.merged Oloop_outcome.t;
   }
 
   type part = {
@@ -116,7 +115,7 @@ module Evaluated = struct
             add_stringl msg;
           )
           | `Eval e ->
-            add_stringl (Output.stdout(Outcome.out e))
+            add_stringl (Outcome.stdout e)
         )
       )
     );

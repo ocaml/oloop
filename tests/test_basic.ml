@@ -9,8 +9,8 @@ let eval t phrase =
      let b = Buffer.create 1024 in
      !Oprint.out_phrase (formatter_of_buffer b) (Oloop.Outcome.result e);
      printf "OUTCOME: [%s]\n%!" (Buffer.contents b);
-     printf "OUT: %S\nERR: %S\n%!" (Oloop.Output.stdout (Oloop.Outcome.out e))
-                                   (Oloop.Output.stderr (Oloop.Outcome.out e))
+     printf "OUT: %S\nERR: %S\n%!" (Oloop.Outcome.stdout e)
+                                   (Oloop.Outcome.stderr e)
      (* printf "OUT+ERR: %S\n" (Oloop.Output.stdout o) *)
   | `Uneval(e, msg) ->
      printf "ERROR: {|%s|}\n" msg;
@@ -31,7 +31,7 @@ let main () =
                  eprintf \"err2\n%!\"; \n\
                  printf \"out2\n%!\"\n\
                  let x = 1." in
-  Oloop.create Oloop.Output.separate >>= function
+  Oloop.create Oloop.Outcome.separate >>= function
   (* Oloop.create Oloop.Output.merged >>= function *)
   | Result.Error e ->
      eprintf "%s\n" (Error.to_string_hum e);

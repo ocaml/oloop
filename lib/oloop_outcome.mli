@@ -23,11 +23,34 @@
 *)
 open Core_kernel.Std
 
-(** The result of a successful evaluation of a phrase. *)
+type separate (** Stdout and stderr are collected separately. *)
+type merged   (** Stderr is redirected to stdout. *)
+
+type 'a kind
+(** Specify whether one wants separate stdout and stderr or not. *)
+
+val separate : separate kind
+val merged : merged kind
+val kind : _ kind -> [`Separate | `Merged]
+
 type 'a eval
+(** The result of a successful evaluation of a phrase.  In particular,
+    it contains the content printed out to stdout and stderr by the
+    phrase.  The ['a] parameter can be one of the following phantom
+    types:
+
+    - [separate] - Indicates that stdout and stderr are captured
+    separately. In this case, you lose information about the relative
+    order in which content was printed to stdout vs stderr.
+
+    - [merged] - Indicates that stderr is redirected to stdout, and
+    thus you can only get the stdout. In this case, you lose
+    information about whether content was printed to stdout or to
+    stderr.  *)
 
 val result : _ eval -> Outcometree.out_phrase
-val out : 'a eval -> 'a Oloop_output.t
+val stdout : _ eval -> string
+val stderr : separate eval -> string
 val warnings : _ eval -> (Location.t * Warnings.t) list
 
 (** List of possible errors when evaluating a phrase. *)
@@ -70,7 +93,9 @@ val uneval_to_error : uneval * string -> Error.t
 (**/**)
 
 val make_eval : result: Outcometree.out_phrase ->
-                out: 'a Oloop_output.t ->
-                warnings: (Location.t * Warnings.t) list -> 'a eval
+                stdout: string ->
+                stderr: string ->
+                warnings: (Location.t * Warnings.t) list ->
+                'a kind -> 'a eval
 
 val deserialize_to_uneval : Oloop_types.serializable_error -> uneval

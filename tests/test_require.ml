@@ -14,10 +14,10 @@ let main () =
                   let x = Vec.make0 3" in
     Oloop.eval_or_error t phrase >>=? fun e ->
     !Oprint.out_phrase std_formatter (Oloop.Outcome.result e);
-    printf "OUTPUT: %s\n" (Oloop.Output.stdout (Oloop.Outcome.out e));
+    printf "OUTPUT: %s\n" (Oloop.Outcome.stdout e);
     return(Result.Ok())
   in
-  Oloop.with_toploop Oloop.Output.separate ~f:eval_phrases
+  Oloop.with_toploop Oloop.Outcome.separate ~f:eval_phrases
                      ~silent_directives:()
 
 let () =

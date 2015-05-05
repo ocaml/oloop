@@ -32,7 +32,7 @@ let eval_phrases t =
        )
 
 let () =
-  ignore(Oloop.with_toploop Oloop.Output.separate ~f:eval_phrases
+  ignore(Oloop.with_toploop Oloop.Outcome.separate ~f:eval_phrases
                             ~silent_directives:()
                             ~determine_deferred:()
          >>| function

@@ -28,7 +28,7 @@ let eval_phrases t =
        )
 
 let () =
-  ignore(Oloop.with_toploop Oloop.Output.merged ~f:eval_phrases
+  ignore(Oloop.with_toploop Oloop.Outcome.merged ~f:eval_phrases
          >>| function
          | Ok _ -> shutdown 0
          | Error e -> eprintf "%s\n%!" (Error.to_string_hum e);

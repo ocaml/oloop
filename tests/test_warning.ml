@@ -20,8 +20,8 @@ let eval_phrases t =
            !Oprint.out_phrase Format.std_formatter (Oloop.Outcome.result e);
            Format.printf "@?";
            Format.printf "OUT: %S\nERR: %S\n%!"
-                         (Oloop.Output.stdout (Oloop.Outcome.out e))
-                         (Oloop.Output.stderr (Oloop.Outcome.out e));
+                         (Oloop.Outcome.stdout e)
+                         (Oloop.Outcome.stderr e);
            Ok()
         | `Uneval(e, msg) ->
            (match Oloop.Outcome.location_of_uneval e with
@@ -33,7 +33,7 @@ let eval_phrases t =
        )
 
 let () =
-  ignore(Oloop.with_toploop Oloop.Output.separate ~f:eval_phrases
+  ignore(Oloop.with_toploop Oloop.Outcome.separate ~f:eval_phrases
                             ~msg_with_location:()
          >>| function
          | Ok _ -> shutdown 0
