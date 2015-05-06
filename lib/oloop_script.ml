@@ -95,6 +95,7 @@ module Evaluated = struct
 
   let to_plain_text t =
     let buf = Buffer.create 2048 in
+    let fmt = Format.formatter_of_buffer buf in
     let add_string x = Buffer.add_string buf x in
     let add_stringl x = Buffer.add_string buf x; Buffer.add_char buf '\n' in
     List.iter t ~f:(fun {number; content=_; phrases} ->
@@ -114,8 +115,14 @@ module Evaluated = struct
             (*   (Outcome.sexp_of_invalid_phrase x |> Sexp.to_string_hum); *)
             add_stringl msg;
           )
-          | `Eval e ->
+          | `Eval e -> (
+            List.iter (Outcome.warnings e) ~f:(fun (loc,warning) ->
+              Location.print_loc fmt loc;
+              ignore (Warnings.print fmt warning)
+            );
+            !Oprint.out_phrase fmt (Outcome.result e);
             add_stringl (Outcome.stdout e)
+          )
         )
       )
     );
