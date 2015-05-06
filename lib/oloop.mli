@@ -4,6 +4,10 @@ open Async_kernel.Std
 module Script : module type of Oloop_script
 
 module Outcome : module type of Oloop_outcome
+  with type separate = Oloop_outcome.separate
+  with type merged = Oloop_outcome.merged
+  with type 'a kind = 'a Oloop_outcome.kind
+  with type 'a eval = 'a Oloop_outcome.eval
 
 type 'a t
 (** A handle to a toploop. *)
