@@ -19,9 +19,8 @@ PreBuildCommand: optcomp-o lib/oloop_ocaml.mlp > lib/oloop_ocaml.ml &&
 Library "oloop"
   Path:        lib
   BuildTools:  ocamlbuild
-  Modules:     Oloop
-  InternalModules: Oloop_types, Oloop_conf, Oloop_ocaml, Oloop_script,
-                   Oloop_outcome, Oloop_core2
+  Modules: Oloop, Oloop_types, Oloop_conf, Oloop_ocaml, Oloop_script,
+           Oloop_outcome, Oloop_core2
   BuildDepends: core_kernel, async, sexplib.syntax, compiler-libs.common,
                 compiler-libs.bytecomp, bytes
 
