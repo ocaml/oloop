@@ -59,6 +59,9 @@ val of_string : filename:string -> string -> t Or_error.t
     phrase to not end with a double semicolon. *)
 val phrases_of_string : string -> string list
 
+val nth : t -> float -> part option
+
+
 (** Evaluated scripts. *)
 module Evaluated : sig
 
@@ -76,6 +79,8 @@ module Evaluated : sig
   }
 
   type t = part list
+
+  val nth : t -> float -> part option
 
   val to_plain_text : t -> string
 

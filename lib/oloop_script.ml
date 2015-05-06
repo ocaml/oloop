@@ -78,6 +78,10 @@ let of_file filename =
   Reader.file_contents filename
   >>| of_string ~filename
 
+let nth t x =
+  List.find t ~f:(fun {number;_} -> Float.equal number x)
+
+
 module Evaluated = struct
 
   type phrase = {
@@ -92,6 +96,9 @@ module Evaluated = struct
   }
 
   type t = part list
+
+  let nth t x =
+    List.find t ~f:(fun {number;_} -> Float.equal number x)
 
   let to_plain_text t =
     let buf = Buffer.create 2048 in
