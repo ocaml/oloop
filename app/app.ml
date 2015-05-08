@@ -14,6 +14,8 @@ let main = Command.async
     +> flag "-init" (optional file)
        ~doc:"<file> Load <file> instead of default init file"
     +> map ~f:bool_to_unit
+       (flag "-noinit" no_arg ~doc:" Do not load any init file")
+    +> map ~f:bool_to_unit
        (flag "-no-app-funct" no_arg ~doc:" Deactivate applicative functors")
     +> map ~f:bool_to_unit
        (flag "-principal" no_arg ~doc:" Check principality of type inference")
@@ -43,13 +45,14 @@ let main = Command.async
           ~doc:" Determine anonymous Lwt.t values (as Utop does)")
     +> anon ("script" %: file)
   )
-  (fun include_dirs init no_app_functors principal rectypes
+  (fun include_dirs init noinit no_app_functors principal rectypes
        short_paths strict_sequence thread
        prog msg_with_location silent_directives
        determine_deferred determine_lwt
        file () ->
     Script.of_file file
-    >>=? eval_script ?include_dirs ?init ?no_app_functors ?principal ?rectypes
+    >>=? eval_script ?include_dirs ?init ?noinit ?no_app_functors
+                     ?principal ?rectypes
                      ?short_paths ?strict_sequence ?thread
                      ?prog ?msg_with_location ?silent_directives
                      ?determine_deferred ?determine_lwt

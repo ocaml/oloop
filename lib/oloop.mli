@@ -15,6 +15,7 @@ type 'a t
 type 'a ocaml_args =
   ?include_dirs: string list ->
   ?init: string ->
+  ?noinit: unit ->
   ?no_app_functors: unit ->
   ?principal: unit ->
   ?rectypes: unit ->

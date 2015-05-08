@@ -149,6 +149,8 @@ let () =
        "<dir> Add <dir> to the list of include directories");
       ("--init", Arg.String(fun f -> Clflags.init_file := Some f),
        "<file> Load <file> instead of default init file");
+      ("--noinit", Arg.Set Clflags.noinit,
+       " Do not load any init file");
       ("--no-app-funct", Arg.Clear Clflags.applicative_functors,
        " Deactivate applicative functors");
       ("--principal", Arg.Set Clflags.principal,

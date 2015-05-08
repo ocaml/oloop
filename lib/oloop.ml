@@ -20,6 +20,7 @@ type 'a t = {
 type 'a ocaml_args =
   ?include_dirs: string list ->
   ?init: string ->
+  ?noinit: unit ->
   ?no_app_functors: unit ->
   ?principal: unit ->
   ?rectypes: unit ->
@@ -41,7 +42,7 @@ let present = function
   | Some () -> true
   | None -> false
 
-let create ?(include_dirs=[]) ?init ?no_app_functors ?principal
+let create ?(include_dirs=[]) ?init ?noinit ?no_app_functors ?principal
            ?rectypes ?short_paths ?strict_sequence ?thread
            ?(prog = !default_toplevel) ?msg_with_location
            ?silent_directives ?determine_deferred ?determine_lwt
@@ -57,6 +58,8 @@ let create ?(include_dirs=[]) ?init ?no_app_functors ?principal
                        ~f:(fun args dir -> "-I" :: dir :: args) in
   let args = match init with Some fn -> "--init" :: fn :: args
                            | None -> args in
+  let args = if present noinit then "--noinit" :: args
+             else args in
   let args = if present no_app_functors then "--no-app-funct" :: args
              else args in
   let args = if present principal then "--principal" :: args else args in
@@ -100,12 +103,12 @@ let close t =
   Reader.close t.sock >>= fun () ->
   Unix.unlink t.sock_path
 
-let with_toploop ?include_dirs ?init ?no_app_functors ?principal
+let with_toploop ?include_dirs ?init ?noinit ?no_app_functors ?principal
                  ?rectypes ?short_paths ?strict_sequence ?thread
                  ?prog ?msg_with_location
                  ?silent_directives ?determine_deferred ?determine_lwt
                  output_merged ~f =
-  create ?prog ?include_dirs ?init ?no_app_functors ?principal
+  create ?prog ?include_dirs ?init ?noinit ?no_app_functors ?principal
          ?rectypes ?short_paths ?strict_sequence ?thread ?msg_with_location
          ?silent_directives ?determine_deferred ?determine_lwt
          output_merged
@@ -159,7 +162,7 @@ let eval (t: 'a t) phrase =
      return(`Uneval(`Internal_error End_of_file,
                          "The toploop did not return a result"))
 
-let eval_script ?include_dirs ?init ?no_app_functors ?principal
+let eval_script ?include_dirs ?init ?noinit ?no_app_functors ?principal
                 ?rectypes ?short_paths ?strict_sequence ?thread
                 ?prog ?msg_with_location
                 ?silent_directives ?determine_deferred ?determine_lwt
@@ -181,7 +184,7 @@ let eval_script ?include_dirs ?init ?no_app_functors ?principal
     {Script.Evaluated.number; content; phrases}
   in
   let parts = (script : Script.t :> Script.part list) in
-  with_toploop ?include_dirs ?init ?no_app_functors ?principal
+  with_toploop ?include_dirs ?init ?noinit ?no_app_functors ?principal
                ?rectypes ?short_paths ?strict_sequence ?thread
                ?prog ?msg_with_location
                ?silent_directives ?determine_deferred ?determine_lwt
