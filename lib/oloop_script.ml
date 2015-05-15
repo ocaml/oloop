@@ -13,6 +13,8 @@ type t = part list
 let phrases_of_string s : string list =
   let rec loop (phrase,phrases) = function
     | [] -> phrase :: phrases
+    | ""::lines ->
+       loop (phrase,phrases) lines
     | line::lines ->
       let accum =
         if String.rstrip line |> String.is_suffix ~suffix:";;" then
