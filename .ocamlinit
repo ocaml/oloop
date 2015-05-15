@@ -9,3 +9,4 @@ let () =
 #load "oloop.cma";;
 open Core.Std;;
 open Async.Std;;
+open Oloop;;
