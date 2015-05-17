@@ -42,11 +42,21 @@ let present = function
   | Some () -> true
   | None -> false
 
+let check_toploop_exists prog =
+  (* Process.create hangs if prog does not exists.  We want to
+     immediately report an error. *)
+  Unix.access prog [`Exec] >>| function
+  | Result.Ok() as r -> r
+  | Result.Error e0 ->
+     let e1 = Invalid_argument(sprintf "Toploop %S not executable" prog) in
+     Result.Error(Error.of_list [Error.of_exn e1; Error.of_exn e0])
+
 let create ?(include_dirs=[]) ?init ?noinit ?no_app_functors ?principal
            ?rectypes ?short_paths ?strict_sequence ?thread
            ?(prog = !default_toplevel) ?msg_with_location
            ?silent_directives ?determine_deferred ?determine_lwt
            output_merged =
+  check_toploop_exists prog >>=? fun () ->
   let sock_path = Filename.temp_file "oloop" ".fifo" in
   Unix.unlink sock_path >>= fun () ->
   let sock = Socket.create Socket.Type.unix in
@@ -92,6 +102,7 @@ let create ?(include_dirs=[]) ?init ?noinit ?no_app_functors ?principal
   | `Socket_closed ->
      let msg = "Oloop.create: toplevel not started" in
      return(Result.Error(Error.of_string msg))
+
 
 let close t =
   let top = Process.stdin t.proc in
