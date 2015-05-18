@@ -112,7 +112,7 @@ module Evaluated = struct
         (
           match outcome with
           | `Uneval (`Internal_error exn, msg) -> (
-            add_stringl (Exn.to_string exn);
+            (* add_stringl (Exn.to_string exn); *)
             add_stringl msg;
           )
           | `Uneval (#Outcome.invalid_phrase as x, msg) -> (
