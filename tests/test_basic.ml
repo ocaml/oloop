@@ -21,7 +21,6 @@ let eval t phrase =
       | None -> ())
 
 
-include Lexer
 let main () =
   let phrase1 = "open Printf\n\
                  let f x = x + 1\n\

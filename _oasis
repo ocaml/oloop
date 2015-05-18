@@ -95,6 +95,15 @@ Executable "multiple"
   BuildTools:     ocamlbuild
   Install:        false
 
+Executable "inexisting_toploop"
+  Path:           tests
+  Build$:         flag(tests)
+  MainIs:         test_inexisting_toploop.ml
+  BuildDepends:   oloop, async
+  CompiledObject: best
+  BuildTools:     ocamlbuild
+  Install:        false
+
 
 Document API
   Title:           API reference for Oloop
