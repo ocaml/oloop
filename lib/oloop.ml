@@ -170,7 +170,7 @@ let eval (t: 'a t) phrase =
         location.  Since we have access to the location, this is useless. *)
      return(`Uneval(Outcome.deserialize_to_uneval e, msg))
   | `Eof ->
-     return(`Uneval(`Internal_error End_of_file,
+     return(`Uneval(`Internal_error "End of file",
                          "The toploop did not return a result"))
 
 let eval_script ?include_dirs ?init ?noinit ?no_app_functors ?principal

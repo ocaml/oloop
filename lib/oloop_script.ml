@@ -113,11 +113,11 @@ module Evaluated = struct
         add_string "# "; add_stringl phrase;
         (
           match outcome with
-          | `Uneval (`Internal_error exn, msg) -> (
-            add_stringl (Exn.to_string exn);
+          | `Uneval (`Internal_error s, msg) -> (
+            add_stringl s;
             add_stringl msg;
           )
-          | `Uneval (#Outcome.invalid_phrase as x, msg) -> (
+          | `Uneval (x, msg) -> (
             (* add_stringl *)
             (*   (Outcome.sexp_of_invalid_phrase x |> Sexp.to_string_hum); *)
             add_stringl msg;

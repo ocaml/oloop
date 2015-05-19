@@ -34,7 +34,7 @@ type serializable_error =
   | `Typetexp of Location.t * Env.summary * Typetexp.error
   | `Typecore of Location.t * Env.summary * Typecore.error
   | `Symtable of Symtable.error
-  | `Internal_error of exn ]
+  | `Internal_error of string ]
 
 val serialize_typedecl_error : Typedecl.error -> serializable_typedecl_error
 

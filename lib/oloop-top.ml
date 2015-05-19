@@ -97,7 +97,7 @@ let eval ~msg_with_location lexbuf =
        | Typecore.Error(l, env, e) -> `Typecore(l, Env.summary env, e)
        | Symtable.Error e -> `Symtable e
        (* FIXME: add more *)
-       | _ -> `Internal_error e in
+       | _ -> `Internal_error(Printexc.to_string e) in
      let msg = if msg_with_location then msg else remove_location msg in
      Error(err, msg)
 
@@ -119,8 +119,8 @@ let main ~msg_with_location ~redirect_stderr ~sock_name =
     let outcome =
       try let phrase = read_phrase_exn stdin in
           eval ~msg_with_location (Lexing.from_string(phrase ^ ";;"))
-      with e -> Error(`Internal_error e, "Exception raised during the \
-                                         phrase evaluation") in
+      with e -> Error(`Internal_error(Printexc.to_string e),
+                      "Exception raised during the phrase evaluation") in
     (* Sending a special ASCII char to indicate the end of the output
        is not 100% robust but the alternative consisting of reading as
        much as is available does not work well. *)
@@ -144,7 +144,8 @@ let main ~msg_with_location ~redirect_stderr ~sock_name =
        (* The marshalling failed *)
        let msg = "oloop-top: sending the phrase eval outcome failed \
                   because: " ^ msg in
-       send_out_phrase_or_error ch (Error(`Internal_error e, msg)));
+       let err = Error(`Internal_error(Printexc.to_string e), msg) in
+       send_out_phrase_or_error ch err);
   done
 
 let () =
