@@ -60,6 +60,7 @@ type uneval = [
 | `Typedecl of Location.t * Typedecl.error
 | `Typetexp of Location.t * Env.t * Typetexp.error
 | `Typecore of Location.t * Env.t * Typecore.error
+| `Typeclass of Location.t * Env.t * Typeclass.error
 | `Symtable of Symtable.error
 | `Internal_error of string
 ] with sexp

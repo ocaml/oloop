@@ -25,6 +25,7 @@ val to_outcometree_phrase : serializable_out_phrase -> Outcometree.out_phrase
     a slight approximation for custom printers).  *)
 
 type serializable_typedecl_error
+type serializable_typeclass_error
 
 (** Enumeration of errors. *)
 type serializable_error =
@@ -33,6 +34,7 @@ type serializable_error =
   | `Typedecl of Location.t * serializable_typedecl_error
   | `Typetexp of Location.t * Env.summary * Typetexp.error
   | `Typecore of Location.t * Env.summary * Typecore.error
+  | `Typeclass of Location.t * Env.summary * serializable_typeclass_error
   | `Symtable of Symtable.error
   | `Internal_error of string ]
 
@@ -41,6 +43,12 @@ val serialize_typedecl_error : Typedecl.error -> serializable_typedecl_error
 val deserialize_typedecl_error :
   env_of_summary:(Env.summary -> Env.t) -> serializable_typedecl_error ->
   Typedecl.error
+
+val serialize_typeclass_error : Typeclass.error -> serializable_typeclass_error
+
+val deserialize_typeclass_error :
+  env_of_summary:(Env.summary -> Env.t) -> serializable_typeclass_error ->
+  Typeclass.error
 
 type out_phrase_or_error =
   | Ok of serializable_out_phrase * bool * (Location.t * Warnings.t) list

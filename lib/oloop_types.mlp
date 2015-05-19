@@ -275,12 +275,184 @@ let deserialize_typedecl_error ~env_of_summary =
   | S_Varying_anonymous -> Varying_anonymous
 
 
+type serializable_ctype_class_match_failure =
+  | S_CM_Virtual_class
+  | S_CM_Parameter_arity_mismatch of int * int
+  | S_CM_Type_parameter_mismatch of Env.summary * (type_expr * type_expr) list
+  | S_CM_Class_type_mismatch of Env.summary * class_type * class_type
+  | S_CM_Parameter_mismatch of Env.summary * (type_expr * type_expr) list
+  | S_CM_Val_type_mismatch of string * Env.summary
+                              * (type_expr * type_expr) list
+  | S_CM_Meth_type_mismatch of string * Env.summary
+                               * (type_expr * type_expr) list
+  | S_CM_Non_mutable_value of string
+  | S_CM_Non_concrete_value of string
+  | S_CM_Missing_value of string
+  | S_CM_Missing_method of string
+  | S_CM_Hide_public of string
+  | S_CM_Hide_virtual of string * string
+  | S_CM_Public_method of string
+  | S_CM_Private_method of string
+  | S_CM_Virtual_method of string
+
+let serialize_ctype_class_match_failure =
+  let open Ctype in
+  function
+  | CM_Virtual_class -> S_CM_Virtual_class
+  | CM_Parameter_arity_mismatch(i, j) -> S_CM_Parameter_arity_mismatch(i, j)
+  | CM_Type_parameter_mismatch(env,l) ->
+     S_CM_Type_parameter_mismatch(Env.summary env, l)
+  | CM_Class_type_mismatch(env, c1, c2) ->
+     S_CM_Class_type_mismatch(Env.summary env, c1, c2)
+  | CM_Parameter_mismatch(env, l) ->
+     S_CM_Parameter_mismatch(Env.summary env, l)
+  | CM_Val_type_mismatch(s, env, l) ->
+     S_CM_Val_type_mismatch(s, Env.summary env, l)
+  | CM_Meth_type_mismatch(s, env, l) ->
+     S_CM_Meth_type_mismatch(s, Env.summary env, l)
+  | CM_Non_mutable_value s -> S_CM_Non_mutable_value s
+  | CM_Non_concrete_value s -> S_CM_Non_concrete_value s
+  | CM_Missing_value s -> S_CM_Missing_value s
+  | CM_Missing_method s -> S_CM_Missing_method s
+  | CM_Hide_public s -> S_CM_Hide_public s
+  | CM_Hide_virtual(s1, s2) -> S_CM_Hide_virtual(s1, s2)
+  | CM_Public_method s -> S_CM_Public_method s
+  | CM_Private_method s -> S_CM_Private_method s
+  | CM_Virtual_method s -> S_CM_Virtual_method s
+
+let deserialize_ctype_class_match_failure ~env_of_summary =
+  let open Ctype in
+  function
+  | S_CM_Virtual_class -> CM_Virtual_class
+  | S_CM_Parameter_arity_mismatch(i, j) -> CM_Parameter_arity_mismatch(i, j)
+  | S_CM_Type_parameter_mismatch(env,l) ->
+     CM_Type_parameter_mismatch(env_of_summary env, l)
+  | S_CM_Class_type_mismatch(env, c1, c2) ->
+     CM_Class_type_mismatch(env_of_summary env, c1, c2)
+  | S_CM_Parameter_mismatch(env, l) ->
+     CM_Parameter_mismatch(env_of_summary env, l)
+  | S_CM_Val_type_mismatch(s, env, l) ->
+     CM_Val_type_mismatch(s, env_of_summary env, l)
+  | S_CM_Meth_type_mismatch(s, env, l) ->
+     CM_Meth_type_mismatch(s, env_of_summary env, l)
+  | S_CM_Non_mutable_value s -> CM_Non_mutable_value s
+  | S_CM_Non_concrete_value s -> CM_Non_concrete_value s
+  | S_CM_Missing_value s -> CM_Missing_value s
+  | S_CM_Missing_method s -> CM_Missing_method s
+  | S_CM_Hide_public s -> CM_Hide_public s
+  | S_CM_Hide_virtual(s1, s2) -> CM_Hide_virtual(s1, s2)
+  | S_CM_Public_method s -> CM_Public_method s
+  | S_CM_Private_method s -> CM_Private_method s
+  | S_CM_Virtual_method s -> CM_Virtual_method s
+
+
+type serializable_typeclass_error =
+  | S_Unconsistent_constraint of (type_expr * type_expr) list
+  | S_Field_type_mismatch of string * string * (type_expr * type_expr) list
+  | S_Structure_expected of class_type
+  | S_Cannot_apply of class_type
+#if ocaml_version > (4, 02)
+  | S_Apply_wrong_label of arg_label
+#else
+  | S_Apply_wrong_label of Asttypes.label
+#endif
+  | S_Pattern_type_clash of type_expr
+  | S_Repeated_parameter
+  | S_Unbound_class_2 of Longident.t
+  | S_Unbound_class_type_2 of Longident.t
+  | S_Abbrev_type_clash of type_expr * type_expr * type_expr
+  | S_Constructor_type_mismatch of string * (type_expr * type_expr) list
+  | S_Virtual_class of bool * bool * string list * string list
+  | S_Parameter_arity_mismatch of Longident.t * int * int
+  | S_Parameter_mismatch of (type_expr * type_expr) list
+  | S_Bad_parameters of Ident.t * type_expr * type_expr
+  | S_Class_match_failure of serializable_ctype_class_match_failure list
+  | S_Unbound_val of string
+  | S_Unbound_type_var of pp_directive list * Ctype.closed_class_failure
+  | S_Make_nongen_seltype of type_expr
+  | S_Non_generalizable_class of Ident.t * Types.class_declaration
+  | S_Cannot_coerce_self of type_expr
+  | S_Non_collapsable_conjunction of
+      Ident.t * Types.class_declaration * (type_expr * type_expr) list
+  | S_Final_self_clash of (type_expr * type_expr) list
+  | S_Mutability_mismatch of string * Asttypes.mutable_flag
+  | S_No_overriding of string * string
+  | S_Duplicate of string * string
+
+let serialize_typeclass_error =
+  let open Typeclass in
+  function
+  | Unconsistent_constraint l -> S_Unconsistent_constraint l
+  | Field_type_mismatch(s1, s2, l) -> S_Field_type_mismatch(s1, s2, l)
+  | Structure_expected c -> S_Structure_expected c
+  | Cannot_apply c -> S_Cannot_apply c
+  | Apply_wrong_label l -> S_Apply_wrong_label l
+  | Pattern_type_clash t -> S_Pattern_type_clash t
+  | Repeated_parameter -> S_Repeated_parameter
+  | Unbound_class_2 l -> S_Unbound_class_2 l
+  | Unbound_class_type_2 l -> S_Unbound_class_type_2 l
+  | Abbrev_type_clash(t1, t2, t3) -> S_Abbrev_type_clash(t1, t2, t3)
+  | Constructor_type_mismatch(s, l) -> S_Constructor_type_mismatch(s, l)
+  | Virtual_class(b1, b2, l1, l2) -> S_Virtual_class(b1, b2, l1, l2)
+  | Parameter_arity_mismatch(l, i, j) -> S_Parameter_arity_mismatch(l, i, j)
+  | Parameter_mismatch l -> S_Parameter_mismatch l
+  | Bad_parameters(id, e1, e2) -> S_Bad_parameters(id, e1, e2)
+  | Class_match_failure l ->
+     let l = List.map serialize_ctype_class_match_failure l in
+     S_Class_match_failure l
+  | Unbound_val s -> S_Unbound_val s
+  | Unbound_type_var (pr, f) -> S_Unbound_type_var(record pr, f)
+  | Make_nongen_seltype t -> S_Make_nongen_seltype t
+  | Non_generalizable_class(id, c) -> S_Non_generalizable_class(id, c)
+  | Cannot_coerce_self t -> S_Cannot_coerce_self t
+  | Non_collapsable_conjunction(id, d, l) ->
+     S_Non_collapsable_conjunction(id, d, l)
+  | Final_self_clash l -> S_Final_self_clash l
+  | Mutability_mismatch(s, f) -> S_Mutability_mismatch(s, f)
+  | No_overriding(s1, s2) -> S_No_overriding(s1, s2)
+  | Duplicate(s1, s2) -> S_Duplicate(s1, s2)
+
+let deserialize_typeclass_error ~env_of_summary =
+  let open Typeclass in
+  function
+  | S_Unconsistent_constraint l -> Unconsistent_constraint l
+  | S_Field_type_mismatch(s1, s2, l) -> Field_type_mismatch(s1, s2, l)
+  | S_Structure_expected c -> Structure_expected c
+  | S_Cannot_apply c -> Cannot_apply c
+  | S_Apply_wrong_label l -> Apply_wrong_label l
+  | S_Pattern_type_clash t -> Pattern_type_clash t
+  | S_Repeated_parameter -> Repeated_parameter
+  | S_Unbound_class_2 l -> Unbound_class_2 l
+  | S_Unbound_class_type_2 l -> Unbound_class_type_2 l
+  | S_Abbrev_type_clash(t1, t2, t3) -> Abbrev_type_clash(t1, t2, t3)
+  | S_Constructor_type_mismatch(s, l) -> Constructor_type_mismatch(s, l)
+  | S_Virtual_class(b1, b2, l1, l2) -> Virtual_class(b1, b2, l1, l2)
+  | S_Parameter_arity_mismatch(l, i, j) -> Parameter_arity_mismatch(l, i, j)
+  | S_Parameter_mismatch l -> Parameter_mismatch l
+  | S_Bad_parameters(id, e1, e2) -> Bad_parameters(id, e1, e2)
+  | S_Class_match_failure l ->
+     let m = List.map (deserialize_ctype_class_match_failure ~env_of_summary)
+                      l in
+     Class_match_failure m
+  | S_Unbound_val s -> Unbound_val s
+  | S_Unbound_type_var (pr, f) -> Unbound_type_var(replay pr, f)
+  | S_Make_nongen_seltype t -> Make_nongen_seltype t
+  | S_Non_generalizable_class(id, c) -> Non_generalizable_class(id, c)
+  | S_Cannot_coerce_self t -> Cannot_coerce_self t
+  | S_Non_collapsable_conjunction(id, d, l) ->
+     Non_collapsable_conjunction(id, d, l)
+  | S_Final_self_clash l -> Final_self_clash l
+  | S_Mutability_mismatch(s, f) -> Mutability_mismatch(s, f)
+  | S_No_overriding(s1, s2) -> No_overriding(s1, s2)
+  | S_Duplicate(s1, s2) -> Duplicate(s1, s2)
+
 type serializable_error =
   [ `Lexer of Location.t * Lexer.error
   | `Syntaxerr of Syntaxerr.error
   | `Typedecl of Location.t * serializable_typedecl_error
   | `Typetexp of Location.t * Env.summary * Typetexp.error
   | `Typecore of Location.t * Env.summary * Typecore.error
+  | `Typeclass of Location.t * Env.summary * serializable_typeclass_error
   | `Symtable of Symtable.error
   | `Internal_error of string ]
 

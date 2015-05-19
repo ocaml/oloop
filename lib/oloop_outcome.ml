@@ -27,7 +27,6 @@ let warnings e = e.warnings
 let make_eval ~result ~stdout ~stderr ~warnings _ =
   { result; stdout; stderr; warnings }
 
-(* Same as Oloop_types.error but with SEXP convertion. *)
 type uneval = [
 | `Lexer of Oloop_ocaml.Location.t * Oloop_ocaml.Lexer.error
 | `Syntaxerr of Oloop_ocaml.Syntaxerr.error
@@ -36,6 +35,8 @@ type uneval = [
                * Oloop_ocaml.Typetexp.error
 | `Typecore of Oloop_ocaml.Location.t * Oloop_ocaml.Env.t
                * Oloop_ocaml.Typecore.error
+| `Typeclass of Oloop_ocaml.Location.t * Oloop_ocaml.Env.t
+                * Oloop_ocaml.Typeclass.error
 | `Symtable of Oloop_ocaml.Symtable.error
 | `Internal_error of string
 ] with sexp
@@ -55,10 +56,13 @@ let deserialize_to_uneval : Oloop_types.serializable_error -> uneval =
                       ~env_of_summary e)
   | `Typetexp(loc, env, e) -> `Typetexp(loc, env_of_summary env, e)
   | `Typecore(loc, env, e) -> `Typecore(loc, env_of_summary env, e)
+  | `Typeclass(loc, env, e) ->
+     let e = Oloop_types.deserialize_typeclass_error ~env_of_summary e in
+     `Typeclass(loc, env_of_summary env, e)
 
 let location_of_uneval : uneval -> Location.t option = function
   | `Lexer(l, _) | `Typedecl(l, _) | `Typetexp(l, _, _)
-  | `Typecore(l, _, _) -> Some l
+  | `Typecore(l, _, _) | `Typeclass(l, _, _) -> Some l
   | `Syntaxerr _ | `Symtable _ | `Internal_error _ -> None
 
 let report_uneval ?(msg_with_location=false) ppf e =
@@ -66,7 +70,7 @@ let report_uneval ?(msg_with_location=false) ppf e =
   | `Internal_error s ->
      Format.fprintf ppf "`Internal_error (Oloop): %s" s
   | (`Lexer _ | `Syntaxerr _ | `Typedecl _ | `Typetexp _ | `Typecore _
-     | `Symtable _) as e ->
+     | `Typeclass _ | `Symtable _) as e ->
      (* Do the reverse than the conversion in oloop-top in order to be able
        to use the compiler reporting functions.  The difference is that
        all environments are empty (they cannot be serialized). *)
@@ -76,6 +80,7 @@ let report_uneval ?(msg_with_location=false) ppf e =
        | `Typedecl(l, e) -> Typedecl.Error(l, e)
        | `Typetexp(l, env, e) -> Typetexp.Error(l, env, e)
        | `Typecore(l, env, e) -> Typecore.Error(l, env, e)
+       | `Typeclass(l, env, e) -> Typeclass.Error(l, env, e)
        | `Symtable e -> Symtable.Error e in
      if msg_with_location then
        Errors.report_error ppf exn

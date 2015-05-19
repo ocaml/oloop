@@ -95,6 +95,9 @@ let eval ~msg_with_location lexbuf =
           `Typedecl(l, Oloop_types.serialize_typedecl_error e)
        | Typetexp.Error(l, env, e) -> `Typetexp(l, Env.summary env, e)
        | Typecore.Error(l, env, e) -> `Typecore(l, Env.summary env, e)
+       | Typeclass.Error(l, env, e) ->
+          `Typeclass(l, Env.summary env,
+                     Oloop_types.serialize_typeclass_error e)
        | Symtable.Error e -> `Symtable e
        (* FIXME: add more *)
        | _ -> `Internal_error(Printexc.to_string e) in
