@@ -56,7 +56,7 @@ let main = Command.async
                      ?short_paths ?strict_sequence ?thread
                      ?prog ?msg_with_location ?silent_directives
                      ?determine_deferred ?determine_lwt
-    >>|? Script.Evaluated.to_plain_text
+    >>|? Script.Evaluated.to_text
     >>|? print_endline
     >>| function
     | Ok () -> ()

@@ -13,6 +13,8 @@ type t = part list
 let phrases_of_string s : string list =
   let rec loop (phrase,phrases) = function
     | [] -> phrase :: phrases
+    | ""::lines ->
+       loop (phrase,phrases) lines
     | line::lines ->
       let accum =
         if String.rstrip line |> String.is_suffix ~suffix:";;" then
@@ -100,15 +102,11 @@ module Evaluated = struct
   let nth t x =
     List.find t ~f:(fun {number;_} -> Float.equal number x)
 
-  let to_plain_text t =
-    let buf = Buffer.create 2048 in
-    let fmt = Format.formatter_of_buffer buf in
-    let add_string x = Buffer.add_string buf x in
-    let add_stringl x = Buffer.add_string buf x; Buffer.add_char buf '\n' in
-    List.iter t ~f:(fun {number; content=_; phrases} ->
-      add_string "(* part ";
-      add_string (Float.to_string_hum number ~strip_zero:true);
-      add_stringl " *)";
+  let phrases_to_text,to_text =
+    let phrases_to_text_helper buf phrases =
+      let fmt = Format.formatter_of_buffer buf in
+      let add_string x = Buffer.add_string buf x in
+      let add_stringl x = Buffer.add_string buf x; Buffer.add_char buf '\n' in
       List.iter phrases ~f:(fun {phrase; outcome} ->
         add_string "# "; add_stringl phrase;
         (
@@ -132,7 +130,22 @@ module Evaluated = struct
           )
         )
       )
-    );
-    Buffer.contents buf
-
+    in
+    let phrases_to_text phrases =
+      let buf = Buffer.create 2048 in
+      phrases_to_text_helper buf phrases;
+      Buffer.contents buf
+    in
+    let to_text t =
+      let buf = Buffer.create 2048 in
+      List.iter t ~f:(fun {number; content=_; phrases} ->
+        Buffer.add_string buf "(* part ";
+	Buffer.add_string buf (Float.to_string_hum number ~strip_zero:true);
+	Buffer.add_string buf " *)\n";
+	phrases_to_text_helper buf phrases;
+      );
+      Buffer.contents buf
+    in
+    phrases_to_text, to_text
+    
 end

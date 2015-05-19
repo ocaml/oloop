@@ -82,6 +82,7 @@ module Evaluated : sig
 
   val nth : t -> float -> part option
 
-  val to_plain_text : t -> string
+  val phrases_to_text : phrase list -> string
+  val to_text : t -> string
 
 end
