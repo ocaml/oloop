@@ -362,7 +362,11 @@ type serializable_typeclass_error =
   | S_Unbound_class_type_2 of Longident.t
   | S_Abbrev_type_clash of type_expr * type_expr * type_expr
   | S_Constructor_type_mismatch of string * (type_expr * type_expr) list
+#if ocaml_version <= (4, 01)
+  | S_Virtual_class of bool * string list * string list
+#else
   | S_Virtual_class of bool * bool * string list * string list
+#endif
   | S_Parameter_arity_mismatch of Longident.t * int * int
   | S_Parameter_mismatch of (type_expr * type_expr) list
   | S_Bad_parameters of Ident.t * type_expr * type_expr
@@ -393,7 +397,11 @@ let serialize_typeclass_error =
   | Unbound_class_type_2 l -> S_Unbound_class_type_2 l
   | Abbrev_type_clash(t1, t2, t3) -> S_Abbrev_type_clash(t1, t2, t3)
   | Constructor_type_mismatch(s, l) -> S_Constructor_type_mismatch(s, l)
+#if ocaml_version <= (4, 01)
+  | Virtual_class(b, l1, l2) -> S_Virtual_class(b, l1, l2)
+#else
   | Virtual_class(b1, b2, l1, l2) -> S_Virtual_class(b1, b2, l1, l2)
+#endif
   | Parameter_arity_mismatch(l, i, j) -> S_Parameter_arity_mismatch(l, i, j)
   | Parameter_mismatch l -> S_Parameter_mismatch l
   | Bad_parameters(id, e1, e2) -> S_Bad_parameters(id, e1, e2)
@@ -426,7 +434,11 @@ let deserialize_typeclass_error ~env_of_summary =
   | S_Unbound_class_type_2 l -> Unbound_class_type_2 l
   | S_Abbrev_type_clash(t1, t2, t3) -> Abbrev_type_clash(t1, t2, t3)
   | S_Constructor_type_mismatch(s, l) -> Constructor_type_mismatch(s, l)
+#if ocaml_version <= (4, 01)
+  | S_Virtual_class(b, l1, l2) -> Virtual_class(b, l1, l2)
+#else
   | S_Virtual_class(b1, b2, l1, l2) -> Virtual_class(b1, b2, l1, l2)
+#endif
   | S_Parameter_arity_mismatch(l, i, j) -> Parameter_arity_mismatch(l, i, j)
   | S_Parameter_mismatch l -> Parameter_mismatch l
   | S_Bad_parameters(id, e1, e2) -> Bad_parameters(id, e1, e2)
