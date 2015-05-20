@@ -205,17 +205,23 @@ let no_output = { Format.
                   out_newline = (fun () -> ());
                   out_spaces = (fun _ -> ()) }
 
-let rewrite = function
+let err_output = Format.pp_get_formatter_out_functions Format.err_formatter ()
+
+let rewrite phrase = match phrase with
   | Parsetree.Ptop_def pstr ->
      (* The typing may generate warnings that one does *not* want to
         display. *)
-     let o = Format.pp_get_formatter_out_functions Format.err_formatter () in
+     Format.pp_print_flush Format.err_formatter ();
      Format.pp_set_formatter_out_functions Format.err_formatter no_output;
-     let tstr, _, _ = Typemod.type_structure !Toploop.toplevel_env pstr
-                                             Location.none in
-     Format.pp_set_formatter_out_functions Format.err_formatter o;
-     Parsetree.Ptop_def (List.map2 rewrite_str_item pstr
-                                   tstr.Typedtree.str_items)
-  | Parsetree.Ptop_dir _ as phrase ->
+     (try
+         let tstr, _, _ = Typemod.type_structure !Toploop.toplevel_env pstr
+                                                 Location.none in
+         Format.pp_set_formatter_out_functions Format.err_formatter err_output;
+         Parsetree.Ptop_def (List.map2 rewrite_str_item pstr
+                                       tstr.Typedtree.str_items)
+       with _ ->
+         Format.pp_set_formatter_out_functions Format.err_formatter err_output;
+         phrase)
+  | Parsetree.Ptop_dir _ ->
     (* Directive *)
     phrase
