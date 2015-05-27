@@ -1,7 +1,7 @@
 #								-*-conf-*-
 OASISFormat: 0.4
 Name:        oloop
-Version:     0.0.1
+Version:     dev
 Synopsis:    Evaluate code through the OCaml toploop.
 #Description: 
 Authors:     Ashish Agarwal, Christophe Troestler
