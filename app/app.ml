@@ -31,6 +31,8 @@ let main = Command.async
           ~doc:" Generate code that supports the system threads library")
     +> flag "-prog" (optional string)
        ~doc:"<path> Full <path> to specially customized toploop"
+    +> flag "-working-dir" (optional string)
+       ~doc:"<path> Switch to <path> before running SCRIPT"
     +> map ~f:bool_to_unit
        (flag "-msg-with-location" no_arg
           ~doc:" Add the source location to error messages")
@@ -47,14 +49,14 @@ let main = Command.async
   )
   (fun include_dirs init noinit no_app_functors principal rectypes
        short_paths strict_sequence thread
-       prog msg_with_location silent_directives
+       prog working_dir msg_with_location silent_directives
        determine_deferred determine_lwt
        file () ->
     Script.of_file file
     >>=? eval_script ?include_dirs ?init ?noinit ?no_app_functors
                      ?principal ?rectypes
                      ?short_paths ?strict_sequence ?thread
-                     ?prog ?msg_with_location ?silent_directives
+                     ?prog ?working_dir ?msg_with_location ?silent_directives
                      ?determine_deferred ?determine_lwt
     >>|? Script.Evaluated.to_text
     >>|? print_endline

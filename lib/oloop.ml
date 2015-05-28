@@ -31,6 +31,7 @@ type 'a ocaml_args =
 
 type 'a args = (
   ?prog: string ->
+  ?working_dir: string ->
   ?msg_with_location: unit ->
   ?silent_directives: unit ->
   ?determine_deferred: unit ->
@@ -53,7 +54,7 @@ let check_toploop_exists prog =
 
 let create ?(include_dirs=[]) ?init ?noinit ?no_app_functors ?principal
            ?rectypes ?short_paths ?strict_sequence ?thread
-           ?(prog = !default_toplevel) ?msg_with_location
+           ?(prog = !default_toplevel) ?working_dir ?msg_with_location
            ?silent_directives ?determine_deferred ?determine_lwt
            output_merged =
   check_toploop_exists prog >>=? fun () ->
@@ -90,7 +91,7 @@ let create ?(include_dirs=[]) ?init ?noinit ?no_app_functors ?principal
     | `Separate -> args in
   (* Make sure that the input phrase is not reprinted: *)
   let env = ["TERM", "norepeat"] in
-  Process.create ~prog ~args ~env:(`Extend env) () >>=? fun proc ->
+  Process.create ?working_dir ~prog ~args ~env:(`Extend env) () >>=? fun proc ->
   (* Wait for the oloop-top client to connect: *)
   Socket.accept (Socket.listen sock) >>= function
   | `Ok(conn_sock, _) ->
@@ -116,10 +117,10 @@ let close t =
 
 let with_toploop ?include_dirs ?init ?noinit ?no_app_functors ?principal
                  ?rectypes ?short_paths ?strict_sequence ?thread
-                 ?prog ?msg_with_location
+                 ?prog ?working_dir ?msg_with_location
                  ?silent_directives ?determine_deferred ?determine_lwt
                  output_merged ~f =
-  create ?prog ?include_dirs ?init ?noinit ?no_app_functors ?principal
+  create ?prog ?working_dir ?include_dirs ?init ?noinit ?no_app_functors ?principal
          ?rectypes ?short_paths ?strict_sequence ?thread ?msg_with_location
          ?silent_directives ?determine_deferred ?determine_lwt
          output_merged
@@ -175,7 +176,7 @@ let eval (t: 'a t) phrase =
 
 let eval_script ?include_dirs ?init ?noinit ?no_app_functors ?principal
                 ?rectypes ?short_paths ?strict_sequence ?thread
-                ?prog ?msg_with_location
+                ?prog ?working_dir ?msg_with_location
                 ?silent_directives ?determine_deferred ?determine_lwt
                 script =
   let eval_phrase oloop phrase : Script.Evaluated.phrase Deferred.t =
@@ -197,7 +198,7 @@ let eval_script ?include_dirs ?init ?noinit ?no_app_functors ?principal
   let parts = (script : Script.t :> Script.part list) in
   with_toploop ?include_dirs ?init ?noinit ?no_app_functors ?principal
                ?rectypes ?short_paths ?strict_sequence ?thread
-               ?prog ?msg_with_location
+               ?prog ?working_dir ?msg_with_location
                ?silent_directives ?determine_deferred ?determine_lwt
                Outcome.merged ~f:(fun t ->
     Deferred.List.fold parts ~init:[] ~f:(fun accum part ->

@@ -26,6 +26,7 @@ type 'a ocaml_args =
 
 type 'a args = (
   ?prog: string ->
+  ?working_dir: string ->
   ?msg_with_location: unit ->
   ?silent_directives: unit ->
   ?determine_deferred: unit ->
