@@ -3,6 +3,8 @@ open Async_kernel.Std
 
 module Script : module type of Oloop_script
 
+module Raw_script : module type of Oloop_raw_script
+
 module Outcome : module type of Oloop_outcome
   with type separate = Oloop_outcome.separate
   with type merged = Oloop_outcome.merged

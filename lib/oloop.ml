@@ -2,6 +2,7 @@ open Core_kernel.Std
 open Async.Std
 
 module Script = Oloop_script
+module Raw_script = Oloop_raw_script
 module Outcome = Oloop_outcome
 
 let default_toplevel =
