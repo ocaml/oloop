@@ -1,6 +1,6 @@
 Oloop Release Notes
 
-oloop dev YYYY-MMM-DD
+oloop 0.1.1 2015-Jun-30
 -----------------------
 * remove noinit option
 
