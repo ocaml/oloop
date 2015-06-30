@@ -21,8 +21,8 @@ depends: [
   "async"
   "base-bytes"
   "core_kernel"
-  "oasis" {>= "0.4"}
-  "ocamlfind" {>= "1.5"}
+  "oasis" {build & >= "0.4"}
+  "ocamlfind" {build & >= "1.5"}
   "sexplib"
   # Included from _opam file
   "optcomp" { build }
