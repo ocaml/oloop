@@ -29,11 +29,14 @@ tar: $(DISTFILES)
 	$(RM) -rf $(PKGNAME)-$(PKGVERSION)
 
 clean:
-	ocaml setup.ml -$@
-	$(RM) $(PKG_TARBALL) \
-              setup.data setup.log setup.ml \
-              lib/oloop_conf.ml lib/oloop_ocaml.ml \
-              app/app_conf.ml
+	rm -rf \
+          _build *.bak *.byte *.native \
+          setup.data setup.log setup.ml \
+          lib/META lib/oloop.mldylib lib/oloop.mllib \
+          lib/oloop_conf.ml lib/oloop_ocaml.ml \
+          lib/oloop_rule.ml lib/oloop_types.ml \
+          app/app_conf.ml \
+          $(PKG_TARBALL)
 
 
 .PHONY: all byte native configure doc test install uninstall reinstall \
