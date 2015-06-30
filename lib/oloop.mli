@@ -16,8 +16,6 @@ type 'a t
 
 type 'a ocaml_args =
   ?include_dirs: string list ->
-  ?init: string ->
-  ?noinit: unit ->
   ?no_app_functors: unit ->
   ?principal: unit ->
   ?rectypes: unit ->
@@ -79,12 +77,22 @@ val with_toploop : (
 val eval : 'a t -> string -> 'a Outcome.t Deferred.t
 (** [eval t phrase] evaluates [phrase] in the toploop [t]. *)
 
-val eval_script : (Script.t -> Script.Evaluated.t Or_error.t Deferred.t) args
-
 val eval_or_error :
   'a t -> string -> 'a Outcome.eval Deferred.Or_error.t
 (** Same as {!eval} except that the [`Uneval] result is transformed
    into an [Error.t] using the function {!Outcome.uneval_to_error}. *)
+
+val init : ?init_file: string -> 'a t -> unit Deferred.Or_error.t
+(** [init t] seek the ".ocamlinit" file and evaluate it.
+
+    @param init_file the name (and path, absolute or relative to the
+    current directory) of the file to evaluate. *)
+
+val eval_script :
+  (?init: string -> ?noinit: unit ->
+   Script.t -> Script.Evaluated.t Or_error.t Deferred.t) args
+(** [eval_script sc] evaluate the script [sc] and return the outcome
+    of each phrase. *)
 
 
 (** {2 Miscellaneous} *)

@@ -20,8 +20,6 @@ type 'a t = {
 
 type 'a ocaml_args =
   ?include_dirs: string list ->
-  ?init: string ->
-  ?noinit: unit ->
   ?no_app_functors: unit ->
   ?principal: unit ->
   ?rectypes: unit ->
@@ -53,7 +51,7 @@ let check_toploop_exists prog =
      let e1 = Invalid_argument(sprintf "Toploop %S not executable" prog) in
      Result.Error(Error.of_list [Error.of_exn e1; Error.of_exn e0])
 
-let create ?(include_dirs=[]) ?init ?noinit ?no_app_functors ?principal
+let create ?(include_dirs=[]) ?no_app_functors ?principal
            ?rectypes ?short_paths ?strict_sequence ?thread
            ?(prog = !default_toplevel) ?working_dir ?msg_with_location
            ?silent_directives ?determine_deferred ?determine_lwt
@@ -68,10 +66,6 @@ let create ?(include_dirs=[]) ?init ?noinit ?no_app_functors ?principal
   let args = ["--sock"; sock_path] in
   let args = List.fold include_dirs ~init:args
                        ~f:(fun args dir -> "-I" :: dir :: args) in
-  let args = match init with Some fn -> "--init" :: fn :: args
-                           | None -> args in
-  let args = if present noinit then "--noinit" :: args
-             else args in
   let args = if present no_app_functors then "--no-app-funct" :: args
              else args in
   let args = if present principal then "--principal" :: args else args in
@@ -116,12 +110,12 @@ let close t =
   Reader.close t.sock >>= fun () ->
   Unix.unlink t.sock_path
 
-let with_toploop ?include_dirs ?init ?noinit ?no_app_functors ?principal
+let with_toploop ?include_dirs ?no_app_functors ?principal
                  ?rectypes ?short_paths ?strict_sequence ?thread
                  ?prog ?working_dir ?msg_with_location
                  ?silent_directives ?determine_deferred ?determine_lwt
                  output_merged ~f =
-  create ?prog ?working_dir ?include_dirs ?init ?noinit ?no_app_functors ?principal
+  create ?prog ?working_dir ?include_dirs ?no_app_functors ?principal
          ?rectypes ?short_paths ?strict_sequence ?thread ?msg_with_location
          ?silent_directives ?determine_deferred ?determine_lwt
          output_merged
@@ -175,11 +169,40 @@ let eval (t: 'a t) phrase =
      return(`Uneval(`Internal_error "End of file",
                          "The toploop did not return a result"))
 
-let eval_script ?include_dirs ?init ?noinit ?no_app_functors ?principal
+(* Say to the toploop to use the file. *)
+let use_if_exists t ~if_not fname =
+  Sys.file_exists fname >>= function
+  | `Yes ->
+     (eval t (sprintf "#use %S" fname) >>| function
+      | `Eval _ -> Ok()
+      | `Uneval err -> Error(Outcome.uneval_to_error err))
+  | `No | `Unknown -> if_not t
+
+let init ?init_file t =
+  match init_file with
+  | Some f ->
+     use_if_exists
+       t f
+       ~if_not:(fun _ ->
+                let msg = sprintf "Init file not found: \"%s\"." f in
+                return(Result.Error(Error.of_string msg)))
+  | None ->
+     use_if_exists
+       t ".ocamlinit"
+       ~if_not:(fun _ ->
+                match Sys.getenv "HOME" with
+                | Some h ->
+                   let home_init = Filename.concat h ".ocamlinit" in
+                   use_if_exists t home_init
+                                 ~if_not:(fun _ -> return(Result.Ok()))
+                | None -> return(Result.Ok()))
+
+
+let eval_script ?include_dirs ?no_app_functors ?principal
                 ?rectypes ?short_paths ?strict_sequence ?thread
                 ?prog ?working_dir ?msg_with_location
                 ?silent_directives ?determine_deferred ?determine_lwt
-                script =
+                ?init:init_file ?noinit script =
   let eval_phrase oloop phrase : Script.Evaluated.phrase Deferred.t =
     eval oloop phrase >>| fun outcome ->
     {Script.Evaluated.phrase; outcome}
@@ -197,17 +220,21 @@ let eval_script ?include_dirs ?init ?noinit ?no_app_functors ?principal
     {Script.Evaluated.number; content; phrases}
   in
   let parts = (script : Script.t :> Script.part list) in
-  with_toploop ?include_dirs ?init ?noinit ?no_app_functors ?principal
+  let run t =
+    (match noinit with
+     | Some () -> return(Ok())
+     | None -> init ?init_file t) >>=? fun () ->
+    Deferred.List.fold
+      parts ~init:[]
+      ~f:(fun accum part -> eval_part t part >>| fun x -> x::accum)
+    >>| List.rev
+    >>| fun x -> Ok x
+  in
+  with_toploop ?include_dirs ?no_app_functors ?principal
                ?rectypes ?short_paths ?strict_sequence ?thread
                ?prog ?working_dir ?msg_with_location
                ?silent_directives ?determine_deferred ?determine_lwt
-               Outcome.merged ~f:(fun t ->
-    Deferred.List.fold parts ~init:[] ~f:(fun accum part ->
-      eval_part t part >>| fun x -> x::accum
-    )
-    >>| List.rev
-    >>| fun x -> Ok x
-  )
+               Outcome.merged ~f:run
 
 let eval_or_error t phrase =
   eval t phrase >>| function
