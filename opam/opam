@@ -27,4 +27,4 @@ depends: [
   # Included from _opam file
   "optcomp" { build }
 ]
-available: [ ocaml-version >= "4.01.0" ]
+available: [ (ocaml-version >= "4.01.0") & (ocaml-version < "4.02.2") ]
