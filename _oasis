@@ -2,7 +2,8 @@
 OASISFormat: 0.4
 Name:        oloop
 Version:     dev
-Synopsis:    Evaluate code through the OCaml toploop.
+Synopsis:    Evaluate code through the OCaml toploop for inclusion in
+  educational material.
 #Description: 
 Authors:     Ashish Agarwal, Christophe Troestler
 Maintainers: Ashish Agarwal <agarwal1975@gmail.com>,
