@@ -5,9 +5,9 @@ maintainer: "Ashish Agarwal <agarwal1975@gmail.com>"
 authors: [ "Ashish Agarwal"
            "Christophe Troestler" ]
 license: "ISC"
-homepage: "https://github.com/agarwal/oloop"
-dev-repo: "https://github.com/agarwal/oloop.git"
-bug-reports: "https://github.com/agarwal/oloop/issues"
+homepage: "https://github.com/ocaml/oloop"
+dev-repo: "https://github.com/ocaml/oloop.git"
+bug-reports: "https://github.com/ocaml/oloop/issues"
 build: [
   ["oasis" "setup"]
   ["ocaml" "setup.ml" "-configure" "--prefix" prefix]
