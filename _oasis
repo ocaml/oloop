@@ -9,7 +9,7 @@ Authors:     Ashish Agarwal, Christophe Troestler
 Maintainers: Ashish Agarwal <agarwal1975@gmail.com>,
              Christophe Troestler <Christophe.Troestler@umons.ac.be>
 License:     ISC
-Homepage:    https://github.com/agarwal/oloop
+Homepage:    https://github.com/ocaml/oloop
 Plugins:     META (0.4), StdFiles (0.4)
 OCamlVersion: >= 4.01.0
 FilesAB:     lib/oloop_conf.ml.ab, app/app_conf.ml.ab
@@ -117,5 +117,5 @@ Document API
 
 SourceRepository master
   Type:     git
-  Location: https://github.com/agarwal/oloop.git
-  Browser:  https://github.com/agarwal/oloop
+  Location: https://github.com/ocaml/oloop.git
+  Browser:  https://github.com/ocaml/oloop
