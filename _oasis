@@ -1,7 +1,7 @@
 #								-*-conf-*-
 OASISFormat: 0.4
 Name:        oloop
-Version:     dev
+Version:     0.1.2
 Synopsis:    Evaluate code through the OCaml toploop for inclusion in
   educational material.
 #Description: 
