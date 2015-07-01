@@ -152,7 +152,7 @@ type serializable_typedecl_error =
   | S_Too_many_constructors
   | S_Duplicate_label of string
   | S_Recursive_abbrev of string
-#if ocaml_version >= (4, 02)
+#if OCAML_VERSION >= (4, 02, 0)
   | S_Cycle_in_def of string * type_expr
 #endif
   | S_Definition_mismatch of type_expr * Includecore.type_mismatch list
@@ -163,7 +163,7 @@ type serializable_typedecl_error =
   | S_Null_arity_external
   | S_Missing_native_external
   | S_Unbound_type_var of type_expr * type_declaration
-#if ocaml_version < (4, 02)
+#if OCAML_VERSION < (4, 02, 0)
   | S_Unbound_exception of Longident.t
   | S_Not_an_exception of Longident.t
 #else
@@ -178,7 +178,7 @@ type serializable_typedecl_error =
   | S_Bad_variance of int * (bool*bool*bool) * (bool*bool*bool)
   | S_Unavailable_type_constructor of Path.t
   | S_Bad_fixed_type of string
-#if ocaml_version < (4, 02)
+#if OCAML_VERSION < (4, 02, 0)
   | S_Unbound_type_var_exc of type_expr * type_expr
 #else
   | S_Unbound_type_var_ext of type_expr * extension_constructor
@@ -194,7 +194,7 @@ let serialize_typedecl_error =
   | Too_many_constructors -> S_Too_many_constructors
   | Duplicate_label s -> S_Duplicate_label s
   | Recursive_abbrev s -> S_Recursive_abbrev s
-#if ocaml_version >= (4, 02)
+#if OCAML_VERSION >= (4, 02, 0)
   | Cycle_in_def(s, e) -> S_Cycle_in_def(s, e)
 #endif
   | Definition_mismatch(e, l) -> S_Definition_mismatch(e, l)
@@ -206,7 +206,7 @@ let serialize_typedecl_error =
   | Null_arity_external -> S_Null_arity_external
   | Missing_native_external -> S_Missing_native_external
   | Unbound_type_var(e, d) -> S_Unbound_type_var(e, d)
-#if ocaml_version < (4, 02)
+#if OCAML_VERSION < (4, 02, 0)
   | Unbound_exception id -> S_Unbound_exception id
   | Not_an_exception id -> S_Not_an_exception id
 #else
@@ -221,7 +221,7 @@ let serialize_typedecl_error =
   | Bad_variance(i, b1, b2) -> S_Bad_variance(i, b1, b2)
   | Unavailable_type_constructor p -> S_Unavailable_type_constructor p
   | Bad_fixed_type s -> S_Bad_fixed_type s
-#if ocaml_version < (4, 02)
+#if OCAML_VERSION < (4, 02, 0)
   | Unbound_type_var_exc(e1, e2) -> S_Unbound_type_var_exc(e1, e2)
 #else
   | Unbound_type_var_ext (e, c) -> S_Unbound_type_var_ext(e, c)
@@ -240,7 +240,7 @@ let deserialize_typedecl_error ~env_of_summary =
   | S_Too_many_constructors -> Too_many_constructors
   | S_Duplicate_label s -> Duplicate_label s
   | S_Recursive_abbrev s -> Recursive_abbrev s
-#if ocaml_version >= (4, 02)
+#if OCAML_VERSION >= (4, 02, 0)
   | S_Cycle_in_def(s, e) -> Cycle_in_def(s, e)
 #endif
   | S_Definition_mismatch(e, l) -> Definition_mismatch(e, l)
@@ -252,7 +252,7 @@ let deserialize_typedecl_error ~env_of_summary =
   | S_Null_arity_external -> Null_arity_external
   | S_Missing_native_external -> Missing_native_external
   | S_Unbound_type_var(e, d) -> Unbound_type_var(e, d)
-#if ocaml_version < (4, 02)
+#if OCAML_VERSION < (4, 02, 0)
   | S_Unbound_exception id -> Unbound_exception id
   | S_Not_an_exception id -> Not_an_exception id
 #else
@@ -267,7 +267,7 @@ let deserialize_typedecl_error ~env_of_summary =
   | S_Bad_variance(i, b1, b2) -> Bad_variance(i, b1, b2)
   | S_Unavailable_type_constructor p -> Unavailable_type_constructor p
   | S_Bad_fixed_type s -> Bad_fixed_type s
-#if ocaml_version < (4, 02)
+#if OCAML_VERSION < (4, 02, 0)
   | S_Unbound_type_var_exc(e1, e2) -> Unbound_type_var_exc(e1, e2)
 #else
   | S_Unbound_type_var_ext (e, c) -> Unbound_type_var_ext(e, c)
@@ -351,7 +351,7 @@ type serializable_typeclass_error =
   | S_Field_type_mismatch of string * string * (type_expr * type_expr) list
   | S_Structure_expected of class_type
   | S_Cannot_apply of class_type
-#if ocaml_version > (4, 02)
+#if OCAML_VERSION >= (4, 03, 0)
   | S_Apply_wrong_label of arg_label
 #else
   | S_Apply_wrong_label of Asttypes.label
@@ -362,7 +362,7 @@ type serializable_typeclass_error =
   | S_Unbound_class_type_2 of Longident.t
   | S_Abbrev_type_clash of type_expr * type_expr * type_expr
   | S_Constructor_type_mismatch of string * (type_expr * type_expr) list
-#if ocaml_version <= (4, 01)
+#if OCAML_VERSION <= (4, 01, 0)
   | S_Virtual_class of bool * string list * string list
 #else
   | S_Virtual_class of bool * bool * string list * string list
@@ -397,7 +397,7 @@ let serialize_typeclass_error =
   | Unbound_class_type_2 l -> S_Unbound_class_type_2 l
   | Abbrev_type_clash(t1, t2, t3) -> S_Abbrev_type_clash(t1, t2, t3)
   | Constructor_type_mismatch(s, l) -> S_Constructor_type_mismatch(s, l)
-#if ocaml_version <= (4, 01)
+#if OCAML_VERSION <= (4, 01, 0)
   | Virtual_class(b, l1, l2) -> S_Virtual_class(b, l1, l2)
 #else
   | Virtual_class(b1, b2, l1, l2) -> S_Virtual_class(b1, b2, l1, l2)
@@ -434,7 +434,7 @@ let deserialize_typeclass_error ~env_of_summary =
   | S_Unbound_class_type_2 l -> Unbound_class_type_2 l
   | S_Abbrev_type_clash(t1, t2, t3) -> Abbrev_type_clash(t1, t2, t3)
   | S_Constructor_type_mismatch(s, l) -> Constructor_type_mismatch(s, l)
-#if ocaml_version <= (4, 01)
+#if OCAML_VERSION <= (4, 01, 0)
   | S_Virtual_class(b, l1, l2) -> Virtual_class(b, l1, l2)
 #else
   | S_Virtual_class(b1, b2, l1, l2) -> Virtual_class(b1, b2, l1, l2)
