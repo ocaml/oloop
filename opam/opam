@@ -13,7 +13,10 @@ build: [
   ["ocaml" "setup.ml" "-configure" "--prefix" prefix]
   ["ocaml" "setup.ml" "-build"]
 ]
-install: ["ocaml" "setup.ml" "-install"]
+install: [
+  ["cp" "opam/files/oloop.install" "./"]
+  ["ocaml" "setup.ml" "-install"]
+]
 build-test: [
   ["ocaml" "setup.ml" "-configure" "--enable-tests"]
   ["ocaml" "setup.ml" "-build"]
