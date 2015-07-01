@@ -82,8 +82,10 @@ val eval_or_error :
 (** Same as {!eval} except that the [`Uneval] result is transformed
    into an [Error.t] using the function {!Outcome.uneval_to_error}. *)
 
-val init : ?init_file: string -> 'a t -> unit Deferred.Or_error.t
-(** [init t] seek the ".ocamlinit" file and evaluate it.
+val init : ?init_file: string -> _ t -> unit Deferred.Or_error.t
+(** [init t] seek the ".ocamlinit" file and evaluate it.  It first
+    checks whether ".ocamlinit" exists in the current directory and,
+    if not, it tries to find one in your $HOME directory.
 
     @param init_file the name (and path, absolute or relative to the
     current directory) of the file to evaluate. *)
@@ -92,7 +94,11 @@ val eval_script :
   (?init: string -> ?noinit: unit ->
    Script.t -> Script.Evaluated.t Or_error.t Deferred.t) args
 (** [eval_script sc] evaluate the script [sc] and return the outcome
-    of each phrase. *)
+    of each phrase.
+
+    @param init load that file at startup.
+    @param noinit do not load any file at startup, not even
+    "$HOME/.ocamlinit". *)
 
 
 (** {2 Miscellaneous} *)
