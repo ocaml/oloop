@@ -53,6 +53,10 @@ let () =
   := fun _fmt phrase ->
      out_phrase := Oloop_types.of_outcometree_phrase phrase
 
+(* let () = *)
+(* See also oloop_rule.ml which needs to (locally) turn off this formatter. *)
+(*     Location.formatter_for_warnings := FIXME *)
+
 let rec is_prefix_loop pre s i len_pre =
   i >= len_pre || (pre.[i] = s.[i] && is_prefix_loop pre s (i + 1) len_pre)
 
