@@ -1,6 +1,19 @@
 (** Module shared between Oloop and the toploop program oloop-top to
     ensure type communication. *)
 
+(**
+ * Library → toploop
+ *)
+
+type top_input =
+  | Phrase of string
+
+val read : in_channel -> top_input
+
+(**
+ * Toploop → library
+ *)
+
 type serializable_out_value
 (** Type equivalent to [Outcometree.out_value] except that it is
     serializable. *)

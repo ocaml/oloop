@@ -106,12 +106,6 @@ let eval ~msg_with_location lexbuf =
      Error(err, msg)
 
 
-let read_phrase_exn ch =
-  let len = int_of_string(input_line ch) in
-  let phrase = Bytes.create len in
-  really_input ch phrase 0 len;
-  phrase
-
 let main ~msg_with_location ~redirect_stderr ~sock_name =
   initialize_toplevel ~redirect_stderr;
   let ch = (* or exn *)
@@ -121,8 +115,9 @@ let main ~msg_with_location ~redirect_stderr ~sock_name =
   while true do
     Location.reset();
     let outcome =
-      try let phrase = read_phrase_exn stdin in
-          eval ~msg_with_location (Lexing.from_string(phrase ^ ";;"))
+      try match Oloop_types.read stdin with
+          | Phrase phrase ->
+             eval ~msg_with_location (Lexing.from_string(phrase ^ ";;"))
       with e -> Error(`Internal_error(Printexc.to_string e),
                       "Exception raised during the phrase evaluation") in
     (* Sending a special ASCII char to indicate the end of the output

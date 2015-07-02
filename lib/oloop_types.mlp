@@ -4,6 +4,16 @@
 open Types (* compiler types *)
 
 (*
+ * Toploop input
+ *)
+
+type top_input =
+  | Phrase of string
+
+let read ch = (input_value ch : top_input)
+(* [send] declared in [Oloop] because it depends on [Core]. *)
+
+(*
  * out_phrase
  *)
 

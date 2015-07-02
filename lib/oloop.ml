@@ -99,11 +99,14 @@ let create ?(include_dirs=[]) ?no_app_functors ?principal
      let msg = "Oloop.create: toplevel not started" in
      return(Result.Error(Error.of_string msg))
 
+let send t (x: Oloop_types.top_input) =
+  let top = Process.stdin t.proc in
+  Writer.write_marshal top x ~flags:[];
+  Writer.flushed top
 
 let close t =
-  let top = Process.stdin t.proc in
-  Writer.send top "exit 0;;"; (* exit the toploop *)
-  Writer.close top >>= fun () ->
+  send t (Oloop_types.Phrase "exit 0;;"); (* exit the toploop *)
+  Writer.close (Process.stdin t.proc) >>= fun () ->
   Reader.close (Process.stdout t.proc) >>= fun () ->
   Reader.close (Process.stderr t.proc) >>= fun () ->
   Unix.wait (`Pid(Process.pid t.proc)) >>= fun _ ->
@@ -135,10 +138,7 @@ let reader_to_string r =
   | `Ok s -> s
 
 let eval (t: 'a t) phrase =
-  let top = Process.stdin t.proc in
-  Writer.write top (Int.to_string (String.length phrase) ^ "\n");
-  Writer.write top phrase;
-  Writer.flushed top
+  send t (Oloop_types.Phrase phrase);
   (* FIXME: Maybe the output of the previous phrase was not yet
      collected.  Must use a queue to serialize phrase → outcome *)
   >>= fun () ->
