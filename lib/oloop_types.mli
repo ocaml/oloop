@@ -6,11 +6,19 @@ type serializable_out_value
     serializable. *)
 
 (** Type equivalent to [Outcometree.out_phrase] except that [out_value]
-    is replaced by the above serializable version. *)
+    is replaced by the above serializable version.
+    [Exception_string] is used in case the exception cannot be
+    serialized (because of the values it carries) and is then
+    converted to a string.
+    [Exception_Stack_overflow] is used so that [Stack_overflow] is
+    preserved across serialization (so one can catch it with the
+    standard exception). *)
 type serializable_out_phrase =
   | Eval of serializable_out_value * Outcometree.out_type
   | Signature of (Outcometree.out_sig_item * serializable_out_value option) list
   | Exception of (exn * serializable_out_value)
+  | Exception_string of (string * serializable_out_value)
+  | Exception_Stack_overflow of serializable_out_value
 
 val empty : serializable_out_phrase
 (** Out phrase that indicates that no particular value is returned by
@@ -20,9 +28,11 @@ val of_outcometree_phrase : Outcometree.out_phrase -> serializable_out_phrase
 (** Transform the usual [Outcometree.out_phrase] to a serializable
     version. *)
 
-val to_outcometree_phrase : serializable_out_phrase -> Outcometree.out_phrase
-(** Recover the origina outcometree from the serialized version (with
-    a slight approximation for custom printers).  *)
+val to_outcometree_value : serializable_out_value -> Outcometree.out_value
+
+val to_outcometree_sig :
+  Outcometree.out_sig_item * serializable_out_value option ->
+  Outcometree.out_sig_item * Outcometree.out_value option
 
 type serializable_typedecl_error
 type serializable_typeclass_error

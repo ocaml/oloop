@@ -5,6 +5,7 @@ let phrases = [
     "1 +";
     "1 +. 1.";
     "type t = 'a";
+    "let rec loop() = 1 + loop() in loop()";
   ]
 
 
@@ -15,7 +16,7 @@ let eval_phrases t =
         Format.printf "# [32m%s[0m;;@\n%!" phrase;
         Oloop.eval t phrase >>| function
         | `Eval e ->
-           !Oprint.out_phrase Format.std_formatter (Oloop.Outcome.result e);
+           Oloop.Outcome.print Format.std_formatter (Oloop.Outcome.result e);
            Format.printf "@?";
            Ok()
         | `Uneval(e, msg) ->

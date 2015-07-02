@@ -23,6 +23,30 @@
 *)
 open Core_kernel.Std
 
+(** Small module to represent exceptions raised by the execution of
+    toplevel functions (possibly in a "degenerated" form because they
+    need to be serialized). *)
+module Exn : sig
+  type t
+
+  val to_exn : t -> exn
+  val to_string : t -> string
+  val to_error : t -> Error.t
+
+  val of_exn : exn -> t
+  val of_string : string -> t
+end
+
+(** Close to [Outcometree.out_phrase] except for the exception which
+    may have been serialized as a string. *)
+type out_phrase =
+  | Eval of Outcometree.out_value * Outcometree.out_type
+  | Signature of (Outcometree.out_sig_item * Outcometree.out_value option) list
+  | Exception of (Exn.t * Outcometree.out_value)
+
+val print : Format.formatter -> out_phrase -> unit
+
+
 type separate (** Stdout and stderr are collected separately. *)
 type merged   (** Stderr is redirected to stdout. *)
 
@@ -48,7 +72,7 @@ type 'a eval
     information about whether content was printed to stdout or to
     stderr.  *)
 
-val result : _ eval -> Outcometree.out_phrase
+val result : _ eval -> out_phrase
 val stdout : _ eval -> string
 val stderr : separate eval -> string
 val warnings : _ eval -> (Location.t * Warnings.t) list
@@ -89,7 +113,7 @@ val uneval_to_error : uneval * string -> Error.t
 
 (**/**)
 
-val make_eval : result: Outcometree.out_phrase ->
+val make_eval : result: out_phrase ->
                 stdout: string ->
                 stderr: string ->
                 warnings: (Location.t * Warnings.t) list ->

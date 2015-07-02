@@ -7,7 +7,7 @@ let eval t phrase =
   Oloop.eval t phrase >>| function
   | `Eval e ->
      let b = Buffer.create 1024 in
-     !Oprint.out_phrase (formatter_of_buffer b) (Oloop.Outcome.result e);
+     Oloop.Outcome.print (formatter_of_buffer b) (Oloop.Outcome.result e);
      printf "OUTCOME: [%s]\n%!" (Buffer.contents b);
      printf "OUT: %S\nERR: %S\n%!" (Oloop.Outcome.stdout e)
                                    (Oloop.Outcome.stderr e)

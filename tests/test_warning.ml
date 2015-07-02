@@ -8,6 +8,9 @@ let phrases = [
     "let h =
        Printf.eprintf \"Hello\";
        fun ?(x=1) -> x";
+    "let rec even n = match n with
+       | 0 -> true
+       | x -> odd (x-1)";
   ]
 
 let eval_phrases t =
@@ -17,17 +20,17 @@ let eval_phrases t =
         Format.printf "# [32m%s[0m;;@\n%!" phrase;
         Oloop.eval t phrase >>| function
         | `Eval e ->
-           !Oprint.out_phrase Format.std_formatter (Oloop.Outcome.result e);
+           Oloop.Outcome.print Format.std_formatter (Oloop.Outcome.result e);
            Format.printf "@?";
            Format.printf "OUT: %S\nERR: %S\n%!"
                          (Oloop.Outcome.stdout e)
                          (Oloop.Outcome.stderr e);
            Ok()
         | `Uneval(e, msg) ->
+           Format.printf "[36m%s[0m" msg;
            (match Oloop.Outcome.location_of_uneval e with
             | Some l -> Location.print Format.std_formatter l
             | None -> ());
-           Format.printf "[36m%s[0m" msg;
            Oloop.Outcome.report_uneval Format.std_formatter e;
            Ok()
        )

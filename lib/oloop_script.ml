@@ -125,7 +125,7 @@ module Evaluated = struct
               Location.print_loc fmt loc;
               ignore (Warnings.print fmt warning)
             );
-            !Oprint.out_phrase fmt (Outcome.result e);
+            Outcome.print fmt (Outcome.result e);
             add_stringl (Outcome.stdout e)
           )
         )

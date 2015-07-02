@@ -149,15 +149,28 @@ let eval (t: 'a t) phrase =
   match out_phrase with
   | `Ok(Oloop_types.Ok(r, is_directive, warnings)) ->
      (* TODO: Parse stderr for warnings *)
-     let out_phrase = Oloop_types.to_outcometree_phrase r in
+     let out_phrase = match r with
+       | Oloop_types.Eval(ov, ot) ->
+          Outcome.Eval(Oloop_types.to_outcometree_value ov, ot)
+       | Oloop_types.Signature l ->
+          Outcome.Signature(List.map ~f:Oloop_types.to_outcometree_sig l)
+       | Oloop_types.Exception(e, ov) ->
+          Outcome.Exception(Outcome.Exn.of_exn e,
+                            Oloop_types.to_outcometree_value ov)
+       | Oloop_types.Exception_string(s, ov) ->
+          Outcome.Exception(Outcome.Exn.of_string s,
+                            Oloop_types.to_outcometree_value ov)
+       | Oloop_types.Exception_Stack_overflow ov ->
+          Outcome.Exception(Outcome.Exn.of_exn Stack_overflow,
+                            Oloop_types.to_outcometree_value ov)
+     in
      let result, stdout, stderr =
        if is_directive && t.silent_directives then
          (* Only silence the output if everything is fine. *)
          match out_phrase with
-         | Outcometree.Ophr_exception _ -> (out_phrase, stdout, stderr)
-         | Outcometree.Ophr_eval _
-         | Outcometree.Ophr_signature _ ->
-            (Outcometree.Ophr_signature [], "", "")
+         | Outcome.Exception _ -> (out_phrase, stdout, stderr)
+         | Outcome.Eval _
+         | Outcome.Signature _ -> (Outcome.Signature [], "", "")
        else (out_phrase, stdout, stderr) in
      return(`Eval(Outcome.make_eval ~result ~stdout ~stderr ~warnings t.kind))
   | `Ok(Oloop_types.Error(e, msg)) ->

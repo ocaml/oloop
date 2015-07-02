@@ -5,7 +5,7 @@ open Format
 let main () =
   let eval_phrase t =
     Oloop.eval_or_error t "let x = 1" >>|? fun e ->
-    !Oprint.out_phrase std_formatter (Oloop.Outcome.result e)
+    Oloop.Outcome.print std_formatter (Oloop.Outcome.result e)
   in
   Oloop.with_toploop Oloop.Outcome.separate ~f:eval_phrase
                      ~prog:"non-existing-toploop"

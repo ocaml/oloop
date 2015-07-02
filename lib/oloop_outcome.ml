@@ -1,5 +1,44 @@
 open Core_kernel.Std
 
+module Exn = struct
+  exception T of string
+
+  type t = Exn of exn
+         | String of string
+
+  let of_exn e = Exn e
+  let of_string s = String s
+
+  let to_exn = function Exn e -> e
+                      | String s -> T s
+
+  let to_string = function Exn e -> Core_kernel.Std.Exn.to_string e
+                         | String s -> s
+
+  let to_error = function Exn e -> Error.of_exn e
+                        | String s -> Error.of_string s
+end
+
+type out_phrase =
+  | Eval of Outcometree.out_value * Outcometree.out_type
+  | Signature of (Outcometree.out_sig_item * Outcometree.out_value option) list
+  | Exception of (Exn.t * Outcometree.out_value)
+
+let print ppf = function
+  | Eval(v, t) -> !Oprint.out_phrase ppf (Outcometree.Ophr_eval(v,t))
+  | Signature l -> !Oprint.out_phrase ppf (Outcometree.Ophr_signature l)
+  | Exception(Exn.Exn Stack_overflow, _) ->
+     Format.fprintf
+       ppf "Stack overflow during evaluation (looping recursion?).@."
+  | Exception(Exn.Exn e, v) ->
+     Printf.printf "*** %s ***\n" (Core_kernel.Std.Exn.to_string e);
+     (* Exceptions [Sys.Break], [Out_of_memory] and [Stack_overflow]
+        can be serialized as exceptions — so fall in this case *)
+     !Oprint.out_phrase ppf (Outcometree.Ophr_exception(e, v))
+  | Exception(Exn.String s, v) ->
+     (* Based on the compiler Oprint.print_out_exception *)
+     Format.fprintf ppf "@[Exception:@ %s.@ %a.@]@." s !Oprint.out_value v
+
 type separate
 type merged
 (* FIXME: One can imagine a 3rd possibility [interleaved], in which no
@@ -13,7 +52,7 @@ let merged = true
 let kind x = if x then `Merged else `Separate
 
 type 'a eval = {
-    result: Outcometree.out_phrase;
+    result: out_phrase;
     stdout: string;
     stderr: string;
     warnings: (Location.t * Warnings.t) list

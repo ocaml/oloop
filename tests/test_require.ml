@@ -5,7 +5,7 @@ open Format
 let eval t phrase =
   printf "# [32m%s[0m;;@\n%!" phrase;
   Oloop.eval_or_error t phrase >>=? fun e ->
-  !Oprint.out_phrase std_formatter (Oloop.Outcome.result e);
+  Oloop.Outcome.print std_formatter (Oloop.Outcome.result e);
   if Oloop.Outcome.stdout e <> "" then
     printf "OUT: %s\n" (Oloop.Outcome.stdout e);
   if Oloop.Outcome.stderr e <> "" then
