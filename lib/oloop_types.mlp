@@ -9,6 +9,7 @@ open Types (* compiler types *)
 
 type top_input =
   | Phrase of string
+  | Init of string
 
 let read ch = (input_value ch : top_input)
 (* [send] declared in [Oloop] because it depends on [Core]. *)
@@ -504,3 +505,14 @@ let send_out_phrase_or_error ch o =
   | _ -> output_out_phrase_or_error ch o
 
 let end_output = '\x04'
+
+(*
+ * Init output
+ *)
+
+type init_output = { init_ok: bool;
+                     init_out: string }
+
+let send_init_outcome ch (o: init_output) =
+  output_value ch o;
+  flush ch

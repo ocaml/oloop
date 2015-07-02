@@ -136,6 +136,32 @@ let eval_and_send ch ~msg_with_location ~redirect_stderr (phrase: string) =
     let err = Error(`Internal_error(Printexc.to_string e), msg) in
     send_out_phrase_or_error ch err
 
+(* This function is inspired by the compiler [Toploop.load_ocamlinit].
+   This latter function cannot be used instead because we want to
+   report back to the library the outcome of this command (and it is
+   not exported anyway!).
+   [fname = ""] means to use the standard ".ocamlinit" file. *)
+let load_ocamlinit ch fname =
+  let buf = Buffer.create 128 in
+  let ppf = Format.formatter_of_buffer buf in
+  let ok =
+    if fname = "" then (
+      if Sys.file_exists ".ocamlinit" then Toploop.use_silently ppf ".ocamlinit"
+      else
+        try
+          let home_init = Filename.concat (Sys.getenv "HOME") ".ocamlinit" in
+          if Sys.file_exists home_init then Toploop.use_silently ppf home_init
+          else true (* No .ocamlinit, that's fine. *)
+        with Not_found -> true
+    )
+    else (
+      if Sys.file_exists fname then Toploop.use_silently ppf fname
+      else (Format.fprintf ppf "Init file not found: \"%s\".@." fname; false)
+    ) in
+  Format.pp_print_flush ppf ();
+  Oloop_types.(send_init_outcome ch { init_ok = ok;
+                                      init_out = Buffer.contents buf })
+
 
 let main ~msg_with_location ~redirect_stderr ~sock_name =
   initialize_toplevel ~redirect_stderr;
@@ -148,6 +174,8 @@ let main ~msg_with_location ~redirect_stderr ~sock_name =
     match Oloop_types.read stdin with
     | Phrase phrase ->
        eval_and_send ch phrase ~msg_with_location ~redirect_stderr
+    | Init fname ->
+       load_ocamlinit ch fname
   done
 
 let () =

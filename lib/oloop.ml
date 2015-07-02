@@ -182,34 +182,15 @@ let eval (t: 'a t) phrase =
      return(`Uneval(`Internal_error "End of file",
                          "The toploop did not return a result"))
 
-(* Say to the toploop to use the file. *)
-let use_if_exists t ~if_not fname =
-  Sys.file_exists fname >>= function
-  | `Yes ->
-     (eval t (sprintf "#use %S" fname) >>| function
-      | `Eval _ -> Ok()
-      | `Uneval err -> Error(Outcome.uneval_to_error err))
-  | `No | `Unknown -> if_not t
-
-let init ?init_file t =
-  match init_file with
-  | Some f ->
-     use_if_exists
-       t f
-       ~if_not:(fun _ ->
-                let msg = sprintf "Init file not found: \"%s\"." f in
-                return(Result.Error(Error.of_string msg)))
-  | None ->
-     use_if_exists
-       t ".ocamlinit"
-       ~if_not:(fun _ ->
-                match Sys.getenv "HOME" with
-                | Some h ->
-                   let home_init = Filename.concat h ".ocamlinit" in
-                   use_if_exists t home_init
-                                 ~if_not:(fun _ -> return(Result.Ok()))
-                | None -> return(Result.Ok()))
-
+let init ?(file="") t =
+  send t (Oloop_types.Init file) >>= fun () ->
+  Reader.read_marshal t.sock
+  >>= function
+  | `Ok(o: Oloop_types.init_output) ->
+     if o.Oloop_types.init_ok then return(Ok())
+     else return(Error(Error.of_string o.Oloop_types.init_out))
+  | `Eof ->
+     return(Error(Error.of_string "Oloop.init: unexpected EOF"))
 
 let eval_script ?include_dirs ?no_app_functors ?principal
                 ?rectypes ?short_paths ?strict_sequence ?thread
@@ -236,7 +217,7 @@ let eval_script ?include_dirs ?no_app_functors ?principal
   let run t =
     (match noinit with
      | Some () -> return(Ok())
-     | None -> init ?init_file t) >>=? fun () ->
+     | None -> init ?file:init_file t) >>=? fun () ->
     Deferred.List.fold
       parts ~init:[]
       ~f:(fun accum part -> eval_part t part >>| fun x -> x::accum)

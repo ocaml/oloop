@@ -7,6 +7,7 @@
 
 type top_input =
   | Phrase of string
+  | Init of string (** [""] if the default .ocamlinit must be sought. *)
 
 val read : in_channel -> top_input
 
@@ -83,3 +84,13 @@ val send_out_phrase_or_error : out_channel -> out_phrase_or_error -> unit
 
 val end_output : char
 (** Char indicating the end of stdout and stderr for this command. *)
+
+
+(**
+ * Answer to {!Init} requests
+ *)
+
+type init_output = { init_ok: bool;
+                     init_out: string }
+
+val send_init_outcome : out_channel -> init_output -> unit

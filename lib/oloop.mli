@@ -82,7 +82,7 @@ val eval_or_error :
 (** Same as {!eval} except that the [`Uneval] result is transformed
    into an [Error.t] using the function {!Outcome.uneval_to_error}. *)
 
-val init : ?init_file: string -> _ t -> unit Deferred.Or_error.t
+val init : ?file: string -> _ t -> unit Deferred.Or_error.t
 (** [init t] seek the ".ocamlinit" file and evaluate it.  It first
     checks whether ".ocamlinit" exists in the current directory and,
     if not, it tries to find one in your $HOME directory.
