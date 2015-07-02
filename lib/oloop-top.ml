@@ -105,6 +105,37 @@ let eval ~msg_with_location lexbuf =
      let msg = if msg_with_location then msg else remove_location msg in
      Error(err, msg)
 
+let eval_and_send ch ~msg_with_location ~redirect_stderr (phrase: string) =
+  let outcome =
+    try eval ~msg_with_location (Lexing.from_string(phrase ^ ";;"))
+    with e -> Error(`Internal_error(Printexc.to_string e),
+                    "Exception raised during the phrase evaluation") in
+  (* Sending a special ASCII char to indicate the end of the output
+     is not 100% robust but the alternative consisting of reading as
+     much as is available does not work well. *)
+  if redirect_stderr then (
+    (* If stderr is redirected to stdout, we do not want to send the
+       separating char twice on stdout.  Flush both formatters first
+       to ensure that [end_output] is at the end. *)
+    Format.pp_print_flush Format.std_formatter ();
+    Format.pp_print_flush Format.err_formatter ();
+    Format.pp_print_char Format.std_formatter end_output;
+    Format.pp_print_flush Format.std_formatter ();
+  )
+  else (
+    Format.pp_print_char Format.std_formatter end_output;
+    Format.pp_print_flush Format.std_formatter ();
+    Format.pp_print_char Format.err_formatter end_output;
+    Format.pp_print_flush Format.err_formatter ();
+  );
+  try send_out_phrase_or_error ch outcome
+  with Invalid_argument msg as e ->
+    (* The marshalling failed *)
+    let msg = "oloop-top: sending the phrase eval outcome failed \
+               because: " ^ msg in
+    let err = Error(`Internal_error(Printexc.to_string e), msg) in
+    send_out_phrase_or_error ch err
+
 
 let main ~msg_with_location ~redirect_stderr ~sock_name =
   initialize_toplevel ~redirect_stderr;
@@ -114,37 +145,9 @@ let main ~msg_with_location ~redirect_stderr ~sock_name =
     Unix.out_channel_of_descr fd in
   while true do
     Location.reset();
-    let outcome =
-      try match Oloop_types.read stdin with
-          | Phrase phrase ->
-             eval ~msg_with_location (Lexing.from_string(phrase ^ ";;"))
-      with e -> Error(`Internal_error(Printexc.to_string e),
-                      "Exception raised during the phrase evaluation") in
-    (* Sending a special ASCII char to indicate the end of the output
-       is not 100% robust but the alternative consisting of reading as
-       much as is available does not work well. *)
-    if redirect_stderr then (
-      (* If stderr is redirected to stdout, we do not want to send the
-         separating char twice on stdout.  Flush both formatters first
-         to ensure that [end_output] is at the end. *)
-      Format.pp_print_flush Format.std_formatter ();
-      Format.pp_print_flush Format.err_formatter ();
-      Format.pp_print_char Format.std_formatter end_output;
-      Format.pp_print_flush Format.std_formatter ();
-    )
-    else (
-      Format.pp_print_char Format.std_formatter end_output;
-      Format.pp_print_flush Format.std_formatter ();
-      Format.pp_print_char Format.err_formatter end_output;
-      Format.pp_print_flush Format.err_formatter ();
-    );
-    (try send_out_phrase_or_error ch outcome
-     with Invalid_argument msg as e ->
-       (* The marshalling failed *)
-       let msg = "oloop-top: sending the phrase eval outcome failed \
-                  because: " ^ msg in
-       let err = Error(`Internal_error(Printexc.to_string e), msg) in
-       send_out_phrase_or_error ch err);
+    match Oloop_types.read stdin with
+    | Phrase phrase ->
+       eval_and_send ch phrase ~msg_with_location ~redirect_stderr
   done
 
 let () =
