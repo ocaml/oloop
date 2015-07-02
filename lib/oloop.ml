@@ -105,7 +105,7 @@ let send t (x: Oloop_types.top_input) =
   Writer.flushed top
 
 let close t =
-  send t (Oloop_types.Phrase "exit 0;;"); (* exit the toploop *)
+  send t (Oloop_types.Phrase "exit 0;;") >>= fun () -> (* exit the toploop *)
   Writer.close (Process.stdin t.proc) >>= fun () ->
   Reader.close (Process.stdout t.proc) >>= fun () ->
   Reader.close (Process.stderr t.proc) >>= fun () ->
@@ -138,7 +138,7 @@ let reader_to_string r =
   | `Ok s -> s
 
 let eval (t: 'a t) phrase =
-  send t (Oloop_types.Phrase phrase);
+  send t (Oloop_types.Phrase phrase)
   (* FIXME: Maybe the output of the previous phrase was not yet
      collected.  Must use a queue to serialize phrase → outcome *)
   >>= fun () ->
