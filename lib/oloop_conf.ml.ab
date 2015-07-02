@@ -1,3 +1,5 @@
 (* Configuration generated at the configure step.     -*- tuareg-*- *)
 
 let bindir = "$bindir"
+
+let default_toplevel = Filename.concat bindir "oloop-top"

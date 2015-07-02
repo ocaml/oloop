@@ -5,10 +5,7 @@ module Script = Oloop_script
 module Raw_script = Oloop_raw_script
 module Outcome = Oloop_outcome
 
-let default_toplevel =
-  ref(if Caml.Sys.file_exists "./oloop-top.byte" then
-        "./oloop-top.byte" (* test *)
-      else Filename.concat Oloop_conf.bindir "oloop-top")
+let default_toplevel = ref Oloop_conf.default_toplevel
 
 type 'a t = {
     proc: Process.t;
@@ -56,6 +53,10 @@ let create ?(include_dirs=[]) ?no_app_functors ?principal
            ?(prog = !default_toplevel) ?working_dir ?msg_with_location
            ?silent_directives ?determine_deferred ?determine_lwt
            output_merged =
+  let prog = match working_dir with
+    | None -> prog
+    | Some d -> if Filename.is_relative prog then Filename.concat d prog
+                else prog in
   check_toploop_exists prog >>=? fun () ->
   let sock_path = Filename.temp_file "oloop" ".fifo" in
   Unix.unlink sock_path >>= fun () ->

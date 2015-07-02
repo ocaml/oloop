@@ -11,6 +11,10 @@ all byte native: configure
 configure: setup.data
 setup.data: setup.ml
 	ocaml $< -configure --enable-tests
+#	Use the local executable oloop-top in order to enable tests
+#	without installing the library:
+	echo "let default_toplevel = \"./oloop-top.byte\"" \
+	  >> lib/oloop_conf.ml
 
 setup.ml: _oasis
 	oasis setup -setup-update dynamic
