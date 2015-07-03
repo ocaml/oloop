@@ -14,13 +14,14 @@ build: [
   ["ocaml" "setup.ml" "-build"]
 ]
 install: ["ocaml" "setup.ml" "-install"]
+remove: [
+  ["ocamlfind" "remove" "oloop"]
+]
 build-test: [
+  ["oasis" "setup"]
   ["ocaml" "setup.ml" "-configure" "--enable-tests"]
   ["ocaml" "setup.ml" "-build"]
   ["ocaml" "setup.ml" "-test"]
-]
-remove: [
-  ["ocamlfind" "remove" "oloop"]
 ]
 build-doc: [ "ocaml" "setup.ml" "-doc" ]
 depends: [

@@ -11,7 +11,7 @@ Maintainers: Ashish Agarwal <agarwal1975@gmail.com>,
 License:     ISC
 Homepage:    https://github.com/agarwal/oloop
 Plugins:     META (0.4), StdFiles (0.4)
-OCamlVersion: >= 4.01.0
+OCamlVersion: >= 4.01.0 && < 4.02.2
 FilesAB:     lib/oloop_conf.ml.ab, app/app_conf.ml.ab
 PreBuildCommand:
   cppo -V OCAML:${ocaml_version} lib/oloop_ocaml.mlp > lib/oloop_ocaml.ml &&
