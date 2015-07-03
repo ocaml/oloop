@@ -28,7 +28,7 @@ tar: $(DISTFILES)
 	mkdir $(PKGNAME)-$(PKGVERSION)
 	cp --parents -r $(DISTFILES) $(PKGNAME)-$(PKGVERSION)/
 #	Create a setup.ml independent of oasis
-	oasis setup
+	cd $(PKGNAME)-$(PKGVERSION) && oasis setup
 	tar -zcvf $(PKG_TARBALL) $(PKGNAME)-$(PKGVERSION)
 	$(RM) -rf $(PKGNAME)-$(PKGVERSION)
 
