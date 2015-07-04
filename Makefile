@@ -5,7 +5,9 @@ PKG_TARBALL = $(PKGNAME)-$(PKGVERSION).tar.gz
 DISTFILES   = README.md _oasis _tags Makefile \
   $(wildcard $(addprefix lib/, *.ml *.mli))
 
-all byte native: configure
+OPAM_FILES = oloop.install $(addprefix opam/, descr findlib opam)
+
+all byte native: configure $(OPAM_FILES)
 	ocaml setup.ml -build
 
 configure: setup.data
@@ -23,6 +25,8 @@ setup.ml: _oasis
 test doc install uninstall reinstall: all
 	ocaml setup.ml -$@
 
+opam $(OPAM_FILES): _oasis
+	oasis2opam --local
 
 tar: $(DISTFILES)
 	mkdir $(PKGNAME)-$(PKGVERSION)
@@ -44,4 +48,4 @@ clean:
 
 
 .PHONY: all byte native configure doc test install uninstall reinstall \
-  clean tar
+  opam clean tar
